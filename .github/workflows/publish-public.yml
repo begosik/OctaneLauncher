@@ -1,0 +1,146 @@
+name: Publish signed public Octane package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'RA3Octane_*_Players_Compact.zip'
+      - 'incoming/RA3Octane_*_Players_Compact.zip'
+      - '.github/workflows/publish-public.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: octane-public-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the public distribution repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify and publish public runtime files only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,re,struct,subprocess,tempfile,zipfile
+          from pathlib import Path
+          ROOT=Path.cwd()
+          candidates=list(ROOT.glob('RA3Octane_*_Players_Compact.zip'))+list((ROOT/'incoming').glob('RA3Octane_*_Players_Compact.zip'))
+          if not candidates:
+              print('No public ZIP has been uploaded yet. No release was created.')
+              raise SystemExit(0)
+          def version_name(p):
+              m=re.fullmatch(r'RA3Octane_(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)_Players_Compact\.zip',p.name)
+              if not m:raise ValueError('Noncanonical archive name')
+              v=tuple(map(int,m.groups()))
+              if max(v)>65535:raise ValueError('Version component outside bounds')
+              return v
+          package=max(candidates,key=version_name)
+          if package.stat().st_size>128*1024*1024:raise ValueError('Package is too large')
+          def sha(b):return hashlib.sha256(b).hexdigest()
+          def run(*args):return subprocess.check_output(list(map(str,args)),text=True).strip()
+          key=ROOT/'public-release-key.pem'
+          if not key.is_file():raise ValueError('Trusted public verification key is missing')
+          with tempfile.TemporaryDirectory(prefix='octane-public-') as td:
+              tmp=Path(td)
+              def verify_signature(data):
+                  if len(data)<384:raise ValueError('Missing signature')
+                  (tmp/'signed.bin').write_bytes(data[:-384]);(tmp/'signature.bin').write_bytes(data[-384:])
+                  subprocess.run(['openssl','dgst','-sha256','-verify',str(key),'-signature',str(tmp/'signature.bin'),str(tmp/'signed.bin')],check=True,stdout=subprocess.DEVNULL)
+              names=('RA3Octane.exe','patches.octpack','release.oct')
+              with zipfile.ZipFile(package) as z:
+                  if sorted(z.namelist())!=sorted('RA3Octane/'+n for n in names):raise ValueError('Only the three PUBLIC runtime files are permitted')
+                  if z.comment:raise ValueError('ZIP comments are not supported')
+                  for x in z.infolist():
+                      if x.compress_type!=zipfile.ZIP_STORED or x.flag_bits or x.extra or x.comment or x.file_size>128*1024*1024 or (x.external_attr>>16&0o170000)==0o120000:raise ValueError('Unsupported ZIP entry')
+                  files={n:z.read('RA3Octane/'+n) for n in names}
+              manifest=files['release.oct']
+              if not 420<=len(manifest)<=16384:raise ValueError('Invalid manifest size')
+              verify_signature(manifest)
+              raw=manifest[:-384];pos=0
+              def take(n):
+                  global pos
+                  if n<0 or pos+n>len(raw):raise ValueError('Truncated signed manifest')
+                  v=raw[pos:pos+n];pos+=n;return v
+              def u32():return struct.unpack('<I',take(4))[0]
+              def text():
+                  s=take(struct.unpack('<H',take(2))[0]).decode('utf8','strict')
+                  if '\0' in s:raise ValueError('NUL in manifest string')
+                  return s
+              if take(8)!=b'OCTREL02':raise ValueError('Expected the signed minimal-release format')
+              v=tuple(u32() for _ in range(3))
+              if v!=version_name(package) or max(v)>65535 or u32()!=2:raise ValueError('Version or file-count mismatch')
+              label=text()
+              if not 1<=len(label)<=100:raise ValueError('Invalid label')
+              for expected in names[:2]:
+                  if text()!=expected:raise ValueError('Unexpected signed filename')
+                  n=struct.unpack('<Q',take(8))[0];digest=take(32).hex()
+                  if n!=len(files[expected]) or sha(files[expected])!=digest:raise ValueError('Runtime file hash mismatch')
+              if pos!=len(raw):raise ValueError('Trailing manifest data')
+              # Inspect the PE version resource, without executing the uploaded EXE.
+              exe=files['RA3Octane.exe']
+              def get16(p):return struct.unpack_from('<H',exe,p)[0]
+              def get32(p):return struct.unpack_from('<I',exe,p)[0]
+              pe=get32(60)
+              if exe[:2]!=b'MZ' or exe[pe:pe+4]!=b'PE\0\0' or get16(pe+4)!=0x8664:raise ValueError('Not a Windows x64 launcher')
+              op=pe+24;st=op+get16(pe+20);count=get16(pe+6)
+              if not 1<=count<=96 or get16(op)!=0x20b:raise ValueError('Bad PE layout')
+              def rva(a,n):
+                  for i in range(count):
+                      s=st+i*40;va=get32(s+12);size=get32(s+16);off=get32(s+20)
+                      if a>=va and a-va+n<=size and off+a-va+n<=len(exe):return off+a-va
+                  raise ValueError('Unbacked PE RVA')
+              rs=get32(op+132);root=rva(get32(op+128),rs);rel=0
+              for depth in range(3):
+                  if rel+16>rs:raise ValueError('Bad resource directory')
+                  c=get16(root+rel+12)+get16(root+rel+14)
+                  if not 1<=c<=4096 or rel+16+8*c>rs:raise ValueError('Bad resource entries')
+                  selected=None
+                  for i in range(c):
+                      ident=get32(root+rel+16+i*8);target=get32(root+rel+20+i*8)
+                      if (depth==0 and ident==16) or (depth>0 and not ident&0x80000000):selected=target;break
+                  if selected is None:raise ValueError('Missing version resource')
+                  if depth<2:
+                      if not selected&0x80000000:raise ValueError('Expected a directory')
+                      rel=selected&0x7fffffff
+                  else:
+                      if selected&0x80000000 or selected+16>rs:raise ValueError('Bad resource leaf')
+                      n=get32(root+selected+4);at=rva(get32(root+selected),n)
+                      keyname=('VS_VERSION_INFO\0').encode('utf-16le');off=(6+len(keyname)+3)&~3
+                      if n<off+52 or exe[at+6:at+6+len(keyname)]!=keyname or get32(at+off)!=0xfeef04bd:raise ValueError('Bad fixed version resource')
+                      ms=get32(at+off+8);ls=get32(at+off+12)
+                      if (ms>>16,ms&65535,ls>>16)!=v or ls&65535:raise ValueError('Embedded EXE version differs from the signed release')
+              pack=files['patches.octpack']
+              if len(pack)<448 or pack[:8]!=b'OCTPACK1':raise ValueError('Invalid patch container')
+              n=struct.unpack_from('<Q',pack,24)[0]
+              if n%16 or n+448!=len(pack):raise ValueError('Invalid patch length')
+              verify_signature(pack)
+              version='.'.join(map(str,v));tag='v'+version
+              probe=subprocess.run(['gh','api',f'repos/{os.environ["GH_REPO"]}/releases/tags/{tag}'],text=True,capture_output=True)
+              if probe.returncode==0:raise ValueError('A release with this version already exists; it will not be overwritten')
+              if '404' not in probe.stderr:raise RuntimeError(probe.stderr)
+              outzip=tmp/package.name;outzip.write_bytes(package.read_bytes())
+              outmanifest=tmp/'release.oct';outmanifest.write_bytes(manifest)
+              notes=(ROOT/'RELEASE_NOTES.md').read_text() if (ROOT/'RELEASE_NOTES.md').is_file() else 'Signed public runtime only.'
+              notes+='\n\nPackage SHA-256: `'+sha(outzip.read_bytes())+'`\n\nDo not mix files from different versions. Private source and signing keys are not included.'
+              nf=tmp/'notes.md';nf.write_text(notes)
+              run('gh','release','create',tag,'--draft','--title','RA3 Octane '+version,'--notes-file',nf,'--target','main')
+              run('gh','release','upload',tag,outzip,outmanifest)
+              downloaded=tmp/'readback';downloaded.mkdir()
+              run('gh','release','download',tag,'--dir',downloaded,'--pattern',package.name,'--pattern','release.oct')
+              for f in (outzip,outmanifest):
+                  if sha((downloaded/f.name).read_bytes())!=sha(f.read_bytes()):raise ValueError('Uploaded asset differs; release remains a draft')
+              run('gh','release','edit',tag,'--draft=false','--latest')
+              print('Published:',run('gh','release','view',tag,'--json','url','--jq','.url'))
+          PY
