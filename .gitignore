@@ -1,0 +1,19 @@
+# Never commit author packages, source trees, credentials or signing keys.
+*Author_PRIVATE*
+*Source*.zip
+private/
+src/
+source/
+reference/
+hotfix_*/
+*.pfx
+*.p12
+*.key
+*private*.pem
+*private*.json
+.env
+Logs/
+.diagnostics/
+.updates/
+settings.ini
+# Only the named PUBLIC ZIP is accepted by the publication workflow.
