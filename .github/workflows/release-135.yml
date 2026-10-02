@@ -1,0 +1,108 @@
+name: Verify and publish signed Octane 1.2.35
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'transport135/**'
+      - '.github/scripts/windows_135.ps1'
+      - '.github/workflows/release-135.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: octane-public-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct the signed public package with the existing trusted key
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.34 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.34_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Public baseline download failed' }
+          python .github/scripts/assemble_signed_v3.py transport135/1.2.35 received
+          if ($LASTEXITCODE -ne 0) { throw 'Signed public package verification failed' }
+      - name: Native Windows UI, worker, recovery and cleanup checks
+        shell: pwsh
+        run: .github/scripts/windows_135.ps1 -Package received/RA3Octane_1.2.35_Players_Compact.zip -Baseline RA3Octane_1.2.32_Players_Compact.zip -Output native-results
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-135-native-evidence
+          path: |
+            received
+            native-results
+          retention-days: 3
+          if-no-files-found: error
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Publish exact verified files with an empty release description
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: |
+          gh release download v1.2.34 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.34_Players_Compact.zip --clobber
+          python3 .github/scripts/assemble_signed_v3.py transport135/1.2.35 published publish
+          gh api repos/begosik/OctaneLauncher/releases/latest > published/latest.json
+      - name: Keep descriptions empty without modifying existing release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: python3 .github/scripts/clear_release_descriptions.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-135-publication-receipt
+          path: published
+          retention-days: 3
+          if-no-files-found: error
+  http-update:
+    needs: publish
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Obtain the published reference for byte comparison only
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.35 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.35_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Reference download failed' }
+          if ((Get-FileHash RA3Octane_1.2.35_Players_Compact.zip).Hash.ToLowerInvariant() -ne '53c1c853e8a5421749be0d8695a7af88c89a1ba88f1689fc83ce883c2b6155ce') { throw 'Reference hash mismatch' }
+      - name: Actual WinHTTP update through the unmodified 1.2.32 launcher
+        shell: pwsh
+        run: .github/scripts/windows_135.ps1 -Mode http -Package RA3Octane_1.2.35_Players_Compact.zip -Baseline RA3Octane_1.2.32_Players_Compact.zip -Output http-results
+      - name: Capture public test scripts
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path receipt-support | Out-Null
+          Copy-Item -Recurse -Force .github receipt-support
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-135-http-evidence
+          path: |
+            http-results
+            receipt-support
+          include-hidden-files: true
+          retention-days: 3
+          if-no-files-found: error
