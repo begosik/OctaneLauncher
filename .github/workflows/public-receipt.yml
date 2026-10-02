@@ -1,0 +1,41 @@
+name: Published runtime receipt
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/public-receipt.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  receipt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Download existing public release and record its identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p public-receipt/download public-receipt/support
+          gh release download v1.2.33 --repo begosik/OctaneLauncher --dir public-receipt/download --pattern 'RA3Octane_1.2.33_Players_Compact.zip' --pattern release.oct
+          gh api repos/begosik/OctaneLauncher/releases/latest > public-receipt/latest.json
+          cp -R .github public-receipt/support/
+          cp public-release-key.pem public-receipt/support/
+          sha256sum public-receipt/download/* > public-receipt/download-sha256.txt
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('public-receipt');m=json.loads((root/'latest.json').read_text())
+          assert m['tag_name']=='v1.2.33' and not m['body'] and not m['draft']
+          expected={'RA3Octane_1.2.33_Players_Compact.zip':'c21ee636f7067c8671a1a2a51f928613ba8830afbc1553a98f2e03a16f3e0bdc','release.oct':'588eda9c9da5b1de4454b646398ca7f8cdea0b49f77564fd390317c55e2a2027'}
+          for name,digest in expected.items():assert hashlib.sha256((root/'download'/name).read_bytes()).hexdigest()==digest
+          print('Published 1.2.33 bytes, latest and empty description verified.')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: public-release-receipt
+          path: public-receipt
+          include-hidden-files: true
+          retention-days: 3
+          if-no-files-found: error
