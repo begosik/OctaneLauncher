@@ -1,0 +1,25 @@
+name: Keep release descriptions empty
+on:
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: octane-public-release
+  cancel-in-progress: false
+jobs:
+  clear:
+    if: github.repository == 'begosik/OctaneLauncher'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Clear descriptions without changing downloadable files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: python3 .github/scripts/clear_release_descriptions.py
