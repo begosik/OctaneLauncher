@@ -6,6 +6,10 @@ from pathlib import Path
 R=Path.cwd();MAX=128*1024*1024
 sha=lambda b:hashlib.sha256(b).hexdigest()
 def cmd(*a):return subprocess.check_output(list(map(str,a)),text=True).strip()
+def api(method,path,payload):
+ r=subprocess.run(['gh','api','--method',method,path,'--input','-'],input=json.dumps(payload),text=True,capture_output=True,timeout=60)
+ if r.returncode:raise RuntimeError(r.stderr)
+ return json.loads(r.stdout)
 def version(s):
  if not re.fullmatch(r'(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)',s):raise ValueError('Invalid version')
  v=tuple(map(int,s.split('.')))
@@ -18,7 +22,6 @@ assert v==p.parent.name and version(v)>version(base) and os.environ['GH_REPO']==
 assert 1<=meta['parts']<=100 and 0<meta['delta_bytes']<2*1024*1024 and 84<meta['delta_clear_bytes']<2*1024*1024
 with tempfile.TemporaryDirectory(prefix='octane-publish-')as td:
  t=Path(td)
- # Reuse only the immutable public base asset and confirm its complete hash.
  cmd('gh','release','download','v'+base,'--dir',t,'--pattern','RA3Octane_'+base+'_Players_Compact.zip')
  source=t/('RA3Octane_'+base+'_Players_Compact.zip');assert source.stat().st_size<MAX
  raw=source.read_bytes();assert sha(raw)==meta['base_zip_sha256']
@@ -49,7 +52,6 @@ with tempfile.TemporaryDirectory(prefix='octane-publish-')as td:
   (t/'signed.bin').write_bytes(b[:-384]);(t/'signature.bin').write_bytes(b[-384:])
   subprocess.run(['openssl','dgst','-sha256','-verify',str(R/'public-release-key.pem'),'-signature',str(t/'signature.bin'),str(t/'signed.bin')],check=True,stdout=subprocess.DEVNULL)
  verify(manifest);verify(pack)
- # Inspect the actual signed manifest, its ordered names, version and hashes.
  assert manifest[:8]==b'OCTREL02' and struct.unpack_from('<4I',manifest,8)==(*version(v),2)
  at=24
  def take(n):
@@ -62,8 +64,6 @@ with tempfile.TemporaryDirectory(prefix='octane-publish-')as td:
  for name,b in data.items():
   assert txt()==name and struct.unpack('<Q',take(8))[0]==len(b) and take(32)==hashlib.sha256(b).digest()
  assert at==len(manifest)-384
- # VERSIONINFO must agree with the release. Search the fixed resource key,
- # then verify the complete fixed-value structure rather than a visible title.
  key=('VS_VERSION_INFO\0').encode('utf-16le');positions=[];start=0
  while True:
   x=exe.find(key,start)
@@ -81,21 +81,29 @@ with tempfile.TemporaryDirectory(prefix='octane-publish-')as td:
   for n,b in data.items():
    item=zipfile.ZipInfo('RA3Octane/'+n,tuple(meta['zip_timestamp']));item.external_attr=0o100644<<16;item.compress_type=zipfile.ZIP_STORED;z.writestr(item,b)
  assert archive.stat().st_size==meta['archive_bytes'] and sha(archive.read_bytes())==meta['archive_sha256']
- tag='v'+v;probe=subprocess.run(['gh','api','repos/'+os.environ['GH_REPO']+'/releases/tags/'+tag],capture_output=True,text=True)
+ endpoint='repos/'+os.environ['GH_REPO']+'/releases'
+ tag='v'+v;probe=subprocess.run(['gh','api',endpoint+'/tags/'+tag],capture_output=True,text=True)
  if probe.returncode==0:
   release=json.loads(probe.stdout)
   if not release['draft']:
-   print('This version is already published; no existing asset is changed.');raise SystemExit(0)
+   check=t/'existing';check.mkdir()
+   cmd('gh','release','download',tag,'--dir',check,'--pattern',archive.name,'--pattern','release.oct')
+   assert (check/archive.name).read_bytes()==archive.read_bytes() and (check/'release.oct').read_bytes()==manifest,'Published files differ; not overwriting'
+   if release.get('body'):
+    cleared=api('PATCH',endpoint+'/'+str(release['id']),{'body':''})
+    assert not cleared.get('body')
+   print('This version is already published; downloads verified and unchanged.');raise SystemExit(0)
   raise ValueError('A draft with this version already exists; inspect it before retrying')
  assert '404' in probe.stderr,probe.stderr
- notes=p.parent/'notes.md';assert notes.is_file()
- cmd('gh','release','create',tag,'--draft','--title','RA3 Octane '+v,'--notes-file',notes,'--target','main')
+ created=api('POST',endpoint,{'tag_name':tag,'target_commitish':'main','name':'RA3 Octane '+v,'body':'','draft':True,'prerelease':False,'generate_release_notes':False})
+ assert created['draft'] and not created.get('body')
  mf=t/'release.oct';mf.write_bytes(manifest)
  cmd('gh','release','upload',tag,archive,mf)
  check=t/'downloaded';check.mkdir()
  cmd('gh','release','download',tag,'--dir',check,'--pattern',archive.name,'--pattern','release.oct')
  for f in (archive,mf):assert sha((check/f.name).read_bytes())==sha(f.read_bytes()),'Upload verification failed'
- cmd('gh','release','edit',tag,'--draft=false','--latest')
- print('PUBLISHED',cmd('gh','release','view',tag,'--json','url','--jq','.url'))
+ published=api('PATCH',endpoint+'/'+str(created['id']),{'draft':False,'body':'','make_latest':'true'})
+ assert not published['draft'] and not published.get('body')
+ print('PUBLISHED',published['html_url'])
  print('PACKAGE_SHA256',sha(archive.read_bytes()))
  print('MANIFEST_SHA256',sha(manifest))
