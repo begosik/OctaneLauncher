@@ -1,0 +1,12 @@
+{
+  "version": "1.2.34",
+  "base_version": "1.2.33",
+  "base_zip_sha256": "c21ee636f7067c8671a1a2a51f928613ba8830afbc1553a98f2e03a16f3e0bdc",
+  "delta_bytes": 9704,
+  "delta_clear_bytes": 39281,
+  "delta_sha256": "581628f70469f40b9b0e012281993fc72be65b7021cc8834991d4daccce783ff",
+  "manifest_base64": "T0NUUkVMMDIBAAAAAgAAACIAAAACAAAAFQBPY3RhbmUgMS4yLjM0IC8gVjEzNFkNAFJBM09jdGFuZS5leGUA7gQAAAAAACMynL8EfXAcjkopfY4goS5uhi6t+6Gw3Ejl4ELc0labDwBwYXRjaGVzLm9jdHBhY2uQPGgAAAAAADa1frqv0s0OK+CHK111Ry8UO8XvY2an3832M6F/61JdLre2nYrlRihc3UeU1SeKy3L65D1aUPLb53rFhuJr6ViHmNFSDugnkMynFizNkgg2CZn8XRWDXNJiIsF/jnbsLD969Ges2f3EW2PIdSwhP26BktlN7te96iSr/F/11siPb0W1mbKjio3DuSe3v5qZMO+ybFfCpE8QwS7Xqfq7aJy2Rdi81tKzOIPZbP/8kXFltktmxktYV+Mu3D+NZ6BmaKyUk0mVkZZaNOEw4Yif2UUAvL3Wu+3fmc+O6Ihom7+cfg8lkp3Xlfnn5NXBb0SMt7KXXsfam1blv3YSbqEh/c1YZa3rtJitApN/TxIpKhediOeDnSZ/u6I/Y81MT6ROfvRD9pCfgw3mpFT7JKKgmvsFwyFreO++ZKemh71PQ8Ghw9a31Sjg8Eu4F2WFqZhOgMO1pB6XyrkN8ccNs9GcwbjlgUwvFJnvb67I3XmfYcijaFuwWht84Zm8e7yXOLc0UTeFajtU55b9wup2ox9P4cnnlV12RoR8LkDHSanBAxCp",
+  "zip_timestamp": [2026,10,2,0,0,0],
+  "archive_bytes": 7155251,
+  "archive_sha256": "3405a42d4038eb85fd1a83ac8a66be295696374535fd9ef80f9ee5c7bded3840"
+}
