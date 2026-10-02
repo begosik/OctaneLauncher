@@ -2,7 +2,7 @@ param([Parameter(Mandatory=$true)][string]$Package,[Parameter(Mandatory=$true)][
 if($PSVersionTable.PSEdition -eq 'Core'){& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -Package $Package -Baseline $Baseline -Output $Output;exit $LASTEXITCODE}
 $ErrorActionPreference='Stop'
 # Reuse only the public native-window helper definitions, not the local staging tests.
-$t=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'windows_public_test.ps1'))
+$t=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'windows_public_test.ps1')).Replace("`r`n","`n")
 $a=$t.IndexOf("`$ErrorActionPreference='Stop'");$b=$t.IndexOf("`ntry {`n `$new=Extract")
 if($a-lt0-or$b-le$a){throw 'Unexpected native helper template'}
 Invoke-Expression $t.Substring($a,$b-$a)
