@@ -32,7 +32,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Signed public package verification failed' }
       - name: Native Windows UI, worker, recovery and cleanup checks
         shell: pwsh
-        run: .github/scripts/windows_135.ps1 -Package received/RA3Octane_1.2.35_Players_Compact.zip -Baseline RA3Octane_1.2.32_Players_Compact.zip -Output native-results
+        run: .github/scripts/windows_135.ps1 -Package received/RA3Octane_1.2.35_Players_Compact.zip -Baseline RA3Octane_1.2.34_Players_Compact.zip -Output native-results
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -84,12 +84,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          gh release download v1.2.34 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.34_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Baseline download failed' }
           gh release download v1.2.35 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.35_Players_Compact.zip --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Reference download failed' }
           if ((Get-FileHash RA3Octane_1.2.35_Players_Compact.zip).Hash.ToLowerInvariant() -ne '53c1c853e8a5421749be0d8695a7af88c89a1ba88f1689fc83ce883c2b6155ce') { throw 'Reference hash mismatch' }
-      - name: Actual WinHTTP update through the unmodified 1.2.32 launcher
+      - name: Actual WinHTTP update through the unmodified 1.2.34 launcher
         shell: pwsh
-        run: .github/scripts/windows_135.ps1 -Mode http -Package RA3Octane_1.2.35_Players_Compact.zip -Baseline RA3Octane_1.2.32_Players_Compact.zip -Output http-results
+        run: .github/scripts/windows_135.ps1 -Mode http -Package RA3Octane_1.2.35_Players_Compact.zip -Baseline RA3Octane_1.2.34_Players_Compact.zip -Output http-results
       - name: Capture public test scripts
         if: always()
         shell: pwsh
