@@ -17,10 +17,10 @@ public static class OctaneNativeTest {
  [StructLayout(LayoutKind.Sequential)] public struct Rect {public int L,T,R,B;}
  public delegate bool EnumProc(IntPtr w,IntPtr p);
  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumProc f,IntPtr p);
- [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr w,EnumProc f,IntPtr p);
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr w,out uint p);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr w,StringBuilder b,int n);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr w,StringBuilder b,int n);
+ [DllImport("user32.dll",EntryPoint="SendMessageW",CharSet=CharSet.Unicode)] public static extern IntPtr ReadText(IntPtr w,uint m,IntPtr n,StringBuilder b);
  [DllImport("user32.dll")] public static extern IntPtr GetDlgItem(IntPtr w,int n);
  [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr w,uint m,IntPtr a,IntPtr b);
  [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr w,uint m,IntPtr a,IntPtr b);
@@ -33,6 +33,7 @@ public static class OctaneNativeTest {
  [DllImport("user32.dll")] public static extern int ReleaseDC(IntPtr w,IntPtr dc);
  [DllImport("gdi32.dll")] public static extern uint GetPixel(IntPtr dc,int x,int y);
  public static string Text(IntPtr w){var b=new StringBuilder(4096);GetWindowText(w,b,b.Capacity);return b.ToString();}
+ public static string ControlText(IntPtr w){var b=new StringBuilder(32768);ReadText(w,0x000d,new IntPtr(b.Capacity),b);return b.ToString();}
  public static string Class(IntPtr w){var b=new StringBuilder(256);GetClassName(w,b,b.Capacity);return b.ToString();}
  public static IntPtr Window(int pid,string cls){IntPtr r=IntPtr.Zero;EnumWindows(delegate(IntPtr w,IntPtr p){uint id;GetWindowThreadProcessId(w,out id);if(id==pid&&Class(w)==cls){r=w;return false;}return true;},IntPtr.Zero);return r;}
  public static IntPtr Title(int pid,string title){IntPtr r=IntPtr.Zero;EnumWindows(delegate(IntPtr w,IntPtr p){uint id;GetWindowThreadProcessId(w,out id);if(id==pid&&Text(w)==title){r=w;return false;}return true;},IntPtr.Zero);return r;}
@@ -79,8 +80,8 @@ try {
  Check ([OctaneNativeTest]::SendMessage($list,0x188,[IntPtr]::Zero,[IntPtr]::Zero).ToInt32()-eq0) 'Native list Home key reaches explicit Vanilla'
  [OctaneNativeTest]::SendMessage($list,0x186,[IntPtr]1,[IntPtr]::Zero)|Out-Null
  [OctaneNativeTest]::SendMessage($mw,0x111,[IntPtr]0x10064,$list)|Out-Null
- $chosen=[OctaneNativeTest]::Text([OctaneNativeTest]::GetDlgItem($mw,102))
- Check ($chosen.EndsWith('.SkuDef')) 'Selection exposes the full real mod path'
+ $chosen=[OctaneNativeTest]::ControlText([OctaneNativeTest]::GetDlgItem($mw,102))
+ Check ($chosen.EndsWith('.SkuDef') -and (Test-Path -LiteralPath $chosen)) 'Selection exposes the full real mod path'
  [OctaneNativeTest]::ResizeClient($mw,900,565);Start-Sleep -Milliseconds 200
  [OctaneNativeTest]::Screenshot($mw,(Join-Path $Output 'mods-scaled-native.png'))|Write-Host
  [OctaneNativeTest]::PostMessage($mw,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null
