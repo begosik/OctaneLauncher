@@ -1,0 +1,42 @@
+name: Verify complete signed public package
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'transport-v2/**'
+      - '.github/scripts/assemble_signed_v2.py'
+      - '.github/scripts/windows_public_test.ps1'
+      - '.github/workflows/verify-public-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: octane-public-v2-validation
+  cancel-in-progress: true
+jobs:
+  verify:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct and verify the complete signed public archive
+        if: hashFiles('transport-v2/1.2.33/manifest.json') != ''
+        run: python .github/scripts/assemble_signed_v2.py transport-v2/1.2.33 received
+      - name: Native Windows launcher and updater checks
+        if: hashFiles('received/RA3Octane_1.2.33_Players_Compact.zip') != '' && hashFiles('.github/scripts/windows_public_test.ps1') != ''
+        shell: pwsh
+        run: .github/scripts/windows_public_test.ps1 -Package received/RA3Octane_1.2.33_Players_Compact.zip -Baseline RA3Octane_1.2.32_Players_Compact.zip -Output native-results
+      - name: Public transport receipt and native evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-public-v2-receipt
+          path: |
+            transport-v2/1.2.33
+            received
+            native-results
+          retention-days: 3
+          if-no-files-found: error
