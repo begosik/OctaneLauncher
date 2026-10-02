@@ -26,7 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download v1.2.33 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.33_Players_Compact.zip
+          gh release download v1.2.33 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.33_Players_Compact.zip --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Public baseline download failed' }
           python -c "from pathlib import Path; p=Path('transport134/1.2.34'); (p/'launcher.b64').write_text(''.join((p/('part%02d.b64'%i)).read_text().strip() for i in range(4)),encoding='ascii')"
           python .github/scripts/assemble_134.py transport134/1.2.34 received
