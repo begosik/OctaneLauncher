@@ -1,6 +1,6 @@
 param([Parameter(Mandatory=$true)][string]$Package,[Parameter(Mandatory=$true)][string]$Baseline,[Parameter(Mandatory=$true)][string]$Output)
 $ErrorActionPreference='Stop'
-$source=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'windows_public_test.ps1'))
+$source=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'windows_public_test.ps1')).Replace("`r`n","`n")
 $before='if(id==pid&&Class(w)==cls)'
 $after='if(id==pid&&IsWindowVisible(w)&&Class(w)==cls)'
 if(!$source.Contains($before)){throw 'Unexpected native test template'}
@@ -18,7 +18,7 @@ $newClose=@'
  Check ($worker.ExitCode-eq0) 'Controlled Help worker exits normally, without termination'
 '@
 if(!$source.Contains($oldClose)){throw 'Unexpected live-worker fixture'}
-$source=$source.Replace($oldClose,$newClose)
+$source=$source.Replace($oldClose,$newClose.Replace("`r`n","`n"))
 $hook="finally {`n Get-Process -Name RA3Octane,RA3OctaneUpdater"
 $inspection=@'
 finally {
@@ -45,7 +45,7 @@ finally {
  Get-Process -Name RA3Octane,RA3OctaneUpdater
 '@
 if(!$source.Contains($hook)){throw 'Unexpected cleanup block'}
-$source=$source.Replace($hook,$inspection)
+$source=$source.Replace($hook,$inspection.Replace("`r`n","`n"))
 $temporary=Join-Path $env:RUNNER_TEMP ('octane-window-ready-'+[guid]::NewGuid().ToString('N')+'.ps1')
 [IO.File]::WriteAllText($temporary,$source,[Text.UTF8Encoding]::new($false))
 try {
