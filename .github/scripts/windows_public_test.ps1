@@ -43,7 +43,7 @@ public static class OctaneNativeTest {
 }
 '@
 function Check([bool]$ok,[string]$name){$Rows.Add([pscustomobject]@{name=$name;passed=$ok});Write-Host (($ok.ToString().ToUpper())+' '+$name);if(!$ok){throw $name}}
-function Until([scriptblock]$test,[string]$name,[int]$seconds=25){$end=[datetime]::UtcNow.AddSeconds($seconds);do{$v=&$test;if($v -is [IntPtr]){if($v-ne[IntPtr]::Zero){return $v}}elseif($v){return $v};Start-Sleep -Milliseconds 150}while([datetime]::UtcNow-lt$end);throw ('Timeout: '+$name)}
+function Until([scriptblock]$test,[string]$name,[int]$seconds=25){$deadlineForProbe=[datetime]::UtcNow.AddSeconds($seconds);do{$probeValue=&$test;if($probeValue -is [IntPtr]){if($probeValue-ne[IntPtr]::Zero){return $probeValue}}elseif($probeValue){return $probeValue};Start-Sleep -Milliseconds 150}while([datetime]::UtcNow-lt$deadlineForProbe);throw ('Timeout: '+$name)}
 function Extract([string]$zip,[string]$name){$d=Join-Path $Work $name;Expand-Archive -LiteralPath $zip -DestinationPath $d;return (Join-Path $d 'RA3Octane')}
 function Launch([string]$root){$p=Start-Process -FilePath (Join-Path $root 'RA3Octane.exe') -WorkingDirectory $root -PassThru;$w=Until {[OctaneNativeTest]::Window($p.Id,'Begosik.RA3Octane.Native.v1')} 'launcher main window';return @{p=$p;w=$w;root=$root}}
 function CloseMain($v){[OctaneNativeTest]::PostMessage($v.w,0x10,[IntPtr]::Zero,[IntPtr]::Zero)|Out-Null;if(!$v.p.WaitForExit(15000)){throw 'Launcher did not close'};Start-Sleep -Milliseconds 200}
