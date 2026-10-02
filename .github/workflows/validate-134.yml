@@ -1,4 +1,4 @@
-name: Validate signed Octane 1.2.34
+name: Validate and publish signed Octane 1.2.34
 on:
   push:
     branches: [main]
@@ -11,10 +11,11 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: octane-134-validation
-  cancel-in-progress: true
+  group: octane-public-release
+  cancel-in-progress: false
 jobs:
   verify:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
     runs-on: windows-latest
     timeout-minutes: 12
     steps:
@@ -42,5 +43,36 @@ jobs:
             received
             native-results
             transport134/1.2.34
+          retention-days: 3
+          if-no-files-found: error
+  publish:
+    needs: verify
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct the same verified public archive and publish without release text
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: |
+          gh release download v1.2.33 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.33_Players_Compact.zip --clobber
+          python3 -c "from pathlib import Path; p=Path('transport134/1.2.34'); (p/'launcher.b64').write_text(''.join((p/('part%02d.b64'%i)).read_text().strip() for i in range(4)),encoding='ascii')"
+          python3 .github/scripts/assemble_134.py transport134/1.2.34 published publish
+          gh api repos/begosik/OctaneLauncher/releases/latest > published/latest.json
+      - name: Keep release descriptions empty without modifying existing download assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: python3 .github/scripts/clear_release_descriptions.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-134-published-receipt
+          path: published
           retention-days: 3
           if-no-files-found: error
