@@ -7,6 +7,7 @@ on:
       - 'RA3Octane_*_Players_Compact.zip'
       - 'incoming/RA3Octane_*_Players_Compact.zip'
       - '.github/workflows/publish-public.yml'
+      - '.github/scripts/clear_release_descriptions.py'
   workflow_dispatch:
 
 permissions:
@@ -26,6 +27,11 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Remove descriptions from existing releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: python3 .github/scripts/clear_release_descriptions.py
       - name: Verify and publish public runtime files only
         env:
           GH_TOKEN: ${{ github.token }}
@@ -50,6 +56,10 @@ jobs:
           if package.stat().st_size>128*1024*1024:raise ValueError('Package is too large')
           def sha(b):return hashlib.sha256(b).hexdigest()
           def run(*args):return subprocess.check_output(list(map(str,args)),text=True).strip()
+          def api(method,path,payload):
+              r=subprocess.run(['gh','api','--method',method,path,'--input','-'],input=json.dumps(payload),text=True,capture_output=True,timeout=60)
+              if r.returncode:raise RuntimeError(r.stderr)
+              return json.loads(r.stdout)
           key=ROOT/'public-release-key.pem'
           if not key.is_file():raise ValueError('Trusted public verification key is missing')
           with tempfile.TemporaryDirectory(prefix='octane-public-') as td:
@@ -88,7 +98,6 @@ jobs:
                   n=struct.unpack('<Q',take(8))[0];digest=take(32).hex()
                   if n!=len(files[expected]) or sha(files[expected])!=digest:raise ValueError('Runtime file hash mismatch')
               if pos!=len(raw):raise ValueError('Trailing manifest data')
-              # Inspect the PE version resource, without executing the uploaded EXE.
               exe=files['RA3Octane.exe']
               def get16(p):return struct.unpack_from('<H',exe,p)[0]
               def get32(p):return struct.unpack_from('<I',exe,p)[0]
@@ -127,20 +136,31 @@ jobs:
               if n%16 or n+448!=len(pack):raise ValueError('Invalid patch length')
               verify_signature(pack)
               version='.'.join(map(str,v));tag='v'+version
-              probe=subprocess.run(['gh','api',f'repos/{os.environ["GH_REPO"]}/releases/tags/{tag}'],text=True,capture_output=True)
-              if probe.returncode==0:raise ValueError('A release with this version already exists; it will not be overwritten')
+              endpoint=f'repos/{os.environ["GH_REPO"]}/releases'
+              probe=subprocess.run(['gh','api',endpoint+'/tags/'+tag],text=True,capture_output=True)
+              if probe.returncode==0:
+                  existing=json.loads(probe.stdout)
+                  if existing['draft']:raise ValueError('A draft with this version exists; it will not be overwritten')
+                  prior=tmp/'existing';prior.mkdir()
+                  run('gh','release','download',tag,'--dir',prior,'--pattern',package.name,'--pattern','release.oct')
+                  if (prior/package.name).read_bytes()!=package.read_bytes() or (prior/'release.oct').read_bytes()!=manifest:
+                      raise ValueError('Published files differ; existing release will not be overwritten')
+                  if existing.get('body'):
+                      cleared=api('PATCH',endpoint+'/'+str(existing['id']),{'body':''})
+                      if cleared.get('body') not in (None,''):raise ValueError('Release description was not cleared')
+                  print('Existing release verified. Empty description; no downloads or version changed.')
+                  raise SystemExit(0)
               if '404' not in probe.stderr:raise RuntimeError(probe.stderr)
               outzip=tmp/package.name;outzip.write_bytes(package.read_bytes())
               outmanifest=tmp/'release.oct';outmanifest.write_bytes(manifest)
-              notes=(ROOT/'RELEASE_NOTES.md').read_text() if (ROOT/'RELEASE_NOTES.md').is_file() else 'Signed public runtime only.'
-              notes+='\n\nPackage SHA-256: `'+sha(outzip.read_bytes())+'`\n\nDo not mix files from different versions. Private source and signing keys are not included.'
-              nf=tmp/'notes.md';nf.write_text(notes)
-              run('gh','release','create',tag,'--draft','--title','RA3 Octane '+version,'--notes-file',nf,'--target','main')
+              created=api('POST',endpoint,{'tag_name':tag,'target_commitish':'main','name':'RA3 Octane '+version,'body':'','draft':True,'prerelease':False,'generate_release_notes':False})
+              if not created['draft'] or created.get('body') not in (None,''):raise ValueError('Unexpected draft release metadata')
               run('gh','release','upload',tag,outzip,outmanifest)
               downloaded=tmp/'readback';downloaded.mkdir()
               run('gh','release','download',tag,'--dir',downloaded,'--pattern',package.name,'--pattern','release.oct')
               for f in (outzip,outmanifest):
                   if sha((downloaded/f.name).read_bytes())!=sha(f.read_bytes()):raise ValueError('Uploaded asset differs; release remains a draft')
-              run('gh','release','edit',tag,'--draft=false','--latest')
-              print('Published:',run('gh','release','view',tag,'--json','url','--jq','.url'))
+              published=api('PATCH',endpoint+'/'+str(created['id']),{'body':'','draft':False,'make_latest':'true'})
+              if published['draft'] or published.get('body') not in (None,''):raise ValueError('Unexpected published release metadata')
+              print('Published:',published['html_url'])
           PY
