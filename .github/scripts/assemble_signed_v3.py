@@ -73,6 +73,11 @@ def delta(old, meta, folder):
 if __name__ == '__main__':
     import assemble_signed_v2 as signed
     signed.delta = delta
+    class CanonicalZipInfo(signed.zipfile.ZipInfo):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.create_system = 3
+    signed.zipfile.ZipInfo = CanonicalZipInfo
     metadata, archive = signed.assemble(Path(sys.argv[1]), Path.cwd(), Path(sys.argv[2]))
     if len(sys.argv) > 3 and sys.argv[3] == 'publish':
         signed.publish(metadata, archive)
