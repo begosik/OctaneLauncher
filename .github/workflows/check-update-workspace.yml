@@ -2,7 +2,9 @@ name: Check update workspace
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/check-update-workspace.yml']
+    paths:
+      - '.github/workflows/check-update-workspace.yml'
+      - '.github/scripts/update_smoke_test.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,66 +17,6 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Prepare the existing public launcher
-        shell: python
-        run: |
-          import hashlib,json,os,re,zipfile
-          from pathlib import Path
-          package=Path('RA3Octane_1.2.32_Players_Compact.zip')
-          assert hashlib.sha256(package.read_bytes()).hexdigest()=='0337ed762d57fa24a59033d4b3c65084a98867275cc89dfad2cf4af08b84ef73'
-          target=Path(os.environ['RUNNER_TEMP'])/'octane-public-startup'
-          target.mkdir()
-          names=('RA3Octane.exe','patches.octpack','release.oct')
-          with zipfile.ZipFile(package) as z:
-              assert set(z.namelist())=={'RA3Octane/'+n for n in names}
-              for name in names:
-                  (target/name).write_bytes(z.read('RA3Octane/'+name))
-          exe=(target/'RA3Octane.exe').read_bytes()
-          strings=[m.group().decode('utf-16le') for m in re.finditer(rb'(?:[\x20-\x7e]\x00){4,}',exe)]
-          paths=sorted({s for s in strings if '.update' in s.lower() and len(s)<160})
-          print('Embedded update path literals:',json.dumps(paths))
-          print('Exact .update path literal:', '.update' in strings)
-          print('Exact .updates path literal:', '.updates' in strings)
-          with open(os.environ['GITHUB_ENV'],'a',encoding='utf8') as out:
-              out.write('OCTANE_TEST_ROOT='+str(target)+'\n')
-      - name: Launch and close the existing release without a game
+      - name: Test public launcher update and retained files
         shell: pwsh
-        run: |
-          $ErrorActionPreference='Stop'
-          $root=$env:OCTANE_TEST_ROOT
-          $p=Start-Process -FilePath (Join-Path $root 'RA3Octane.exe') -WorkingDirectory $root -PassThru
-          try {
-            Start-Sleep -Seconds 25
-            $p.Refresh()
-            $alive=-not $p.HasExited
-            $window=if($alive){[bool]$p.MainWindowHandle}else{$false}
-            Write-Output "Launcher alive before close: $alive; main window present: $window"
-            if($alive){
-              $null=$p.CloseMainWindow()
-              $null=$p.WaitForExit(10000)
-              $p.Refresh()
-              if(-not $p.HasExited){
-                Write-Output 'Test cleanup: launcher did not close normally; stopping only this test process.'
-                Stop-Process -Id $p.Id -Force
-              }
-            }
-            Get-ChildItem -LiteralPath $root -Force | Select-Object Name,Mode,Length | Format-Table -AutoSize
-            foreach($name in @('.update','.updates')){
-              $folder=Join-Path $root $name
-              if(Test-Path -LiteralPath $folder){
-                Write-Output "Remaining $name entries:"
-                $rows=Get-ChildItem -LiteralPath $folder -Force -Recurse | ForEach-Object {
-                  [pscustomobject]@{Path=$_.FullName.Substring($folder.Length);IsDirectory=$_.PSIsContainer;Bytes=$_.Length}
-                }
-                $rows | ConvertTo-Json -Compress
-              }else{Write-Output "Remaining $name entries: directory absent"}
-            }
-            $log=Join-Path $root 'Logs\launcher.log'
-            if(Test-Path -LiteralPath $log){
-              Write-Output 'Relevant launcher log lines:'
-              Get-Content -LiteralPath $log | Where-Object {$_ -match '(?i)update|signature|octane 1\.2\.32|start|fail|error'} | Select-Object -Last 18
-            }
-            Write-Output 'Scope: Windows launcher startup/close only; no RA3 gameplay or update installation performed.'
-          }finally{
-            if(Get-Process -Id $p.Id -ErrorAction SilentlyContinue){Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}
-          }
+        run: python .github/scripts/update_smoke_test.py
