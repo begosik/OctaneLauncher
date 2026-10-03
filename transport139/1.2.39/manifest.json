@@ -1,0 +1,17 @@
+{
+ "version":"1.2.39","base_version":"1.2.38",
+ "base_zip_sha256":"5645d429b5b17884e367282bab4f03473a56cb1c31432dbbb09cae6482c16059",
+ "base_exe_sha256":"e8d7a8e9ec168d07683d579a9f0c818351a96b3422b887af1b7ca28804edd8ee",
+ "client_material_offsets":[214400,214368],
+ "deltas":{
+  "exe":{"files":["exe00.b64","exe01.b64","exe02.b64","exe03.b64","exe04.b64"],"delta_bytes":150705,"compressed_bytes":46812,"sha256":"1c86924459a87c9441f3426032b157586f3e586e00a19bd6947c80cd1763aa60","compression":"xz"},
+  "pack":{"files":["pack00.b64"],"delta_bytes":93,"compressed_bytes":124,"sha256":"49eaf45dfe419ab685b20b10f5d52a68f391c067f4fdd57743b14362b30a8ccd","compression":"xz"}
+ },
+ "pack_header":"T0NUUEFDSzGTGmJeKLZEKeJbPBkVOuGiADtoAAAAAAA=",
+ "pack_tail":"pCDKtHsHA2WX+AzzM6/EUfxqZ92ygrjeHLSdffNJbiZNw8QocpDB4DnpnE5E+CdMJM/Qw7w6bvhPMcOfdNByFYuElrzkOHhECdAt2Uk9DMvjnqtJDg4SpAAmYrFOIZFfQZ9xjvx+eNmzTryt2je19jTPkQGlHWgkKZK0oPfyJr7wwSQuEx7IY1R3wMiG9qTaz5fyo8ihMZzuZphCqYb8+VKqieX7RCjMo8iKvBPNHFiq+hBe9B1WXVE+DLNvO2ZhOO/IYsJy5FMsd6DwGZen79Jq8/ea4LSL4ku7tmAGLvgsT+ByDdOBqelLnWekZFMUp+p/t5cQwOFPErrhTGfjGi+b2k7Oma+H7i5MDBWL2q810NrlWXfIdyM36dDYXF1rvBSsYtG5Bbx4ZQDLuRsX39ulL+K1WX2R70Rxc0D8QKm8xKBl2jmYuuiPYtgvuuWuLscF38U+t7yVVfcAsTgTczjI1TA0sxUNsT7rHf24IokpvU2W322oCagL2jt/K+p/MyWPhn33nRceNzI2/2isFqfC+RkCcbT1zDqfZKAgeMQ=",
+ "manifest":"T0NUUkVMMDIBAAAAAgAAACcAAAACAAAAIABPY3RhbmUgMS4yLjM5IC8gcmV0YWluZWQgcnVudGltZQ0AUkEzT2N0YW5lLmV4ZQBABQAAAAAA0FhpFoCwHTngY3l8TUx92x/Px54wxLTvy40bPcBGYfgPAHBhdGNoZXMub2N0cGFja8A8aAAAAAAAHiZmNNEx/cVL5YFc/C9d5IcxX1Tr4JpfHfOGT7NYq/hnrFJFRU1ShMMeDE6kkBs13Eq8WS05Sm/6vrqw+NA24YRQB/6AWfLb1/33T3qDBELO1v68WejClz3ged8UHShxxzA5OzsEqLlYQcNv6YcNoetWQWZbLZvjdaUA/+Z8WJ+jWkjA/+ohOtyyARIzK+lTRd9OtUmc2Pj4LvEkKLUAjbjMMCv8vCevDDRMCq4dI/WC0ZeiLnpu8dK6z/LsHzWWq+9B836SmiGen3DXQnnmEXPiyi80kr6NjJuMusOvgyu6Wao1ZKSBtDERVaGcEYo0DAqQniF9vzbb6GRVK9Q9KVdL36DmeMa27AFBaDybfm33eIYGLJUmRutWpS1WzeqMfvlirgD5KvO09P5ua+fOFrKpElwo89/WT7oC1b99uXUx+EBCTePTQcZeZ43gD6W1wrJRvf6pkmEryXrVwdqucM46j9nLhse1XoprF/j6KDPBQKzj3xUK8Hoyve+mCOHMmNNnbvSWI+q1VB5jkfZ+zwyqkzAG7z7qEl4SqcAOsBI=",
+ "files":{"RA3Octane.exe":"d058691680b01d39e063797c4d4c7ddb1fcfc79e30c4b4efcb8d1b3dc04661f8","patches.octpack":"1e266634d131fdc54be5815cfc2f5de487315f54ebe09a5f1df3864fb358abf8","release.oct":"5fd42ef30163a4b269433f98bb351cf48981753e2392777d546ec40d5a3bc456"},
+ "zip_timestamp":[2026,10,3,0,0,0],
+ "archive_bytes":7176302,
+ "archive_sha256":"ce6914ab85e2666c73959dd64e6a1f4f79cd4320b80d042c22acbac1ce791079"
+}
