@@ -1,0 +1,36 @@
+name: Verify 1.2.38 support transport
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/repair-138-transport.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Correct the known transfer duplication, only when the original hash is recovered
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,json,subprocess
+          path='repos/begosik/OctaneLauncher/contents/transport138/1.2.38/support.b64'
+          meta=json.loads(subprocess.check_output(['gh','api',path]))
+          current=base64.b64decode(meta['content']).decode('ascii')
+          expected='f768a1e0389a7624afb0c44e2e9a00eaab17c1d9298b19cb640569ffa809c5a0'
+          fixed=current
+          bad='/ob09t09Yqof0';good='/ob09Yqof0'
+          if bad in current:
+              assert current.count(bad)==1
+              fixed=current.replace(bad,good)
+          raw=base64.b64decode(fixed.strip(),validate=True)
+          assert hashlib.sha256(raw).hexdigest()==expected,'No mutation: support still differs from the verified local bytes'
+          if fixed!=current:
+              body={'message':'Restore exact verified public acceptance-helper transport','sha':meta['sha'],'branch':'main','content':base64.b64encode(fixed.encode()).decode()}
+              subprocess.run(['gh','api','--method','PUT',path,'--input','-'],input=json.dumps(body).encode(),check=True,stdout=subprocess.DEVNULL)
+          print('Exact public support transport verified; no runtime, release asset or private source changed.')
+          PY
