@@ -1,0 +1,37 @@
+name: Receive staged public runtime
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/receipt-staged139.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  receipt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct signed unpublished checkpoint for final delta comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.38 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.38_Players_Compact.zip --clobber
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'.github/scripts')
+          import assemble_signed_v2 as a
+          from assemble_signed_v3 import delta
+          a.delta=delta
+          a.assemble(Path('transport139/1.2.39'),Path.cwd(),Path('staged139'))
+          PY
+          cp RA3Octane_1.2.38_Players_Compact.zip staged139/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: public-staged139-receipt
+          path: staged139
+          retention-days: 3
+          if-no-files-found: error
