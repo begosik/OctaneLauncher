@@ -1,0 +1,28 @@
+name: Locate public BattleNet test fixture
+on:
+  push:
+    paths: ['.github/workflows/bnet-fixture-source.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Inspect official public metadata only
+        run: |
+          python3 - <<'PY'
+          import urllib.request,xml.etree.ElementTree as E
+          urls=['https://update.ra3battle.net/app/RA3BattleNet/manifests/manifest-1.9.9.11.xml','https://file.cor-games.com/srv/ra3battlenet/desktop/Ra3BattleNet_Setup_1.9.9.11.exe']
+          for url in urls:
+           try:
+            with urllib.request.urlopen(url,timeout=25) as r:
+             b=r.read(200000)
+             print('SOURCE',url,'STATUS',r.status,'TYPE',r.headers.get('Content-Type'),'LENGTH',r.headers.get('Content-Length'))
+             if b.lstrip().startswith(b'<'):
+              root=E.fromstring(b)
+              for el in root.iter():
+               if el.tag.split('}')[-1]=='File' and 'nativedll' in E.tostring(el,encoding='unicode').lower():print(E.tostring(el,encoding='unicode'))
+           except Exception as e:print('UNAVAILABLE',url,type(e).__name__,str(e))
+          PY
