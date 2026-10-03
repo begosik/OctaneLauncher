@@ -1,0 +1,116 @@
+name: Verify and publish signed Octane 1.2.36
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'transport136/**'
+      - '.github/scripts/assemble_136.py'
+      - '.github/scripts/windows_136.ps1'
+      - '.github/scripts/notice_136.ps1'
+      - '.github/scripts/memory_136.ps1'
+      - '.github/workflows/release-136.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: octane-public-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct the exact signed public archive
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.35 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.35_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Baseline download failed' }
+          python .github/scripts/assemble_136.py transport136/1.2.36 received
+          if ($LASTEXITCODE -ne 0) { throw 'Signed package verification failed' }
+      - name: Native launcher, worker and recovery regression
+        shell: pwsh
+        run: .github/scripts/windows_136.ps1 -Package received/RA3Octane_1.2.36_Players_Compact.zip -Baseline RA3Octane_1.2.35_Players_Compact.zip -Output native-results
+      - name: Exact EXE popup with controlled notification state
+        shell: pwsh
+        run: .github/scripts/notice_136.ps1 -Package received/RA3Octane_1.2.36_Players_Compact.zip -Output notice-results
+      - name: Launcher-created session and native upper-address memory probe
+        shell: pwsh
+        run: .github/scripts/memory_136.ps1 -Package received/RA3Octane_1.2.36_Players_Compact.zip -Output memory-results
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-136-native-evidence
+          path: |
+            received
+            native-results
+            notice-results
+            memory-results
+          retention-days: 3
+          if-no-files-found: error
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Publish byte-exact signed runtime with an empty description
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: |
+          gh release download v1.2.35 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.35_Players_Compact.zip --clobber
+          python3 .github/scripts/assemble_136.py transport136/1.2.36 published publish
+          gh api repos/begosik/OctaneLauncher/releases/latest > published/latest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-136-publication-receipt
+          path: published
+          retention-days: 3
+          if-no-files-found: error
+  http-update:
+    needs: publish
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Download public baseline and independent reference
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.35 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.35_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Baseline download failed' }
+          gh release download v1.2.36 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.36_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Reference download failed' }
+          if ((Get-FileHash RA3Octane_1.2.36_Players_Compact.zip).Hash.ToLowerInvariant() -ne 'dba6780e96f58ab0ceb4b255faeb6f3004e4cb59bd32533eea8b1603fa88b924') { throw 'Reference hash mismatch' }
+      - name: Actual WinHTTP update from unmodified 1.2.35
+        shell: pwsh
+        run: .github/scripts/windows_136.ps1 -Mode http -Package RA3Octane_1.2.36_Players_Compact.zip -Baseline RA3Octane_1.2.35_Players_Compact.zip -Output http-results
+      - name: Capture public test scripts
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path receipt-support | Out-Null
+          Copy-Item -Recurse -Force .github receipt-support
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-136-http-evidence
+          path: |
+            http-results
+            receipt-support
+          include-hidden-files: true
+          retention-days: 3
+          if-no-files-found: error
