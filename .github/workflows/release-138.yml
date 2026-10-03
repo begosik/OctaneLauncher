@@ -1,10 +1,11 @@
-name: Verify signed Octane 1.2.38
+name: Verify and publish signed Octane 1.2.38
 on:
   push:
     branches: [main]
     paths:
       - 'transport138/**'
       - '.github/workflows/release-138.yml'
+      - '.github/scripts/unpack_support138.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,17 +24,7 @@ jobs:
       - name: Unpack hash-bound public acceptance support
         shell: pwsh
         run: |
-          @'
-          import base64,hashlib,io,zipfile
-          from pathlib import Path
-          r=Path('transport138/1.2.38');b=base64.b64decode((r/'support.b64').read_text().strip(),validate=True)
-          assert hashlib.sha256(b).hexdigest()=='f768a1e0389a7624afb0c44e2e9a00eaab17c1d9298b19cb640569ffa809c5a0'
-          names={'assemble_138.py','layout138.json','bnet_138.ps1','windows_138.ps1','http_bnet_138.ps1'}
-          with zipfile.ZipFile(io.BytesIO(b)) as z:
-              assert set(z.namelist())==names and len(z.infolist())==len(names)
-              assert sum(i.file_size for i in z.infolist())<100000
-              for n in names:(Path('.github/scripts')/n).write_bytes(z.read(n))
-          '@ | python -
+          python .github/scripts/unpack_support138.py
           if ($LASTEXITCODE -ne 0) { throw 'Public support identity mismatch' }
       - name: Reconstruct and verify the exact signed public archive
         shell: pwsh
@@ -66,5 +57,78 @@ jobs:
             bnet-results
             notice-results
             memory-results
+          retention-days: 3
+          if-no-files-found: error
+  publish:
+    needs: verify
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct the verified archive, publish empty description and read back
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: |
+          python3 .github/scripts/unpack_support138.py
+          python3 -c "import json,subprocess; m=json.loads(subprocess.check_output(['gh','api','repos/begosik/OctaneLauncher/releases/latest'])); assert m['tag_name'] in ('v1.2.37','v1.2.38'), 'A different newer release already exists'"
+          gh release download v1.2.37 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.37_Players_Compact.zip --clobber
+          python3 .github/scripts/assemble_138.py transport138/1.2.38 published publish
+          gh api repos/begosik/OctaneLauncher/releases/latest > published/latest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-138-publication-receipt
+          path: published
+          retention-days: 3
+          if-no-files-found: error
+  http-update:
+    needs: publish
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Download public baseline and independent published reference
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          python .github/scripts/unpack_support138.py
+          if ($LASTEXITCODE -ne 0) { throw 'Support identity mismatch' }
+          gh release download v1.2.37 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.37_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Baseline download failed' }
+          gh release download v1.2.38 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.38_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Published download failed' }
+          if ((Get-FileHash RA3Octane_1.2.38_Players_Compact.zip).Hash.ToLowerInvariant() -ne '5645d429b5b17884e367282bab4f03473a56cb1c31432dbbb09cae6482c16059') { throw 'Published bytes differ' }
+      - name: Read the unchanged authenticated public BattleNet payload
+        shell: pwsh
+        run: .github/scripts/bnet_138.ps1 -Mode export -Package RA3Octane_1.2.38_Players_Compact.zip -Baseline RA3Octane_1.2.37_Players_Compact.zip -Output fixture
+      - name: Actual WinHTTP self-update with BattleNet enabled
+        shell: pwsh
+        run: .github/scripts/http_bnet_138.ps1 -Package RA3Octane_1.2.38_Players_Compact.zip -Baseline RA3Octane_1.2.37_Players_Compact.zip -Output http-on -Fixture fixture/signed-NativeDll.dll -Preference 1
+      - name: Actual WinHTTP self-update keeps explicit BattleNet OFF
+        shell: pwsh
+        run: .github/scripts/http_bnet_138.ps1 -Package RA3Octane_1.2.38_Players_Compact.zip -Baseline RA3Octane_1.2.37_Players_Compact.zip -Output http-off -Fixture fixture/signed-NativeDll.dll -Preference 0
+      - name: Capture exact public acceptance support
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path support-receipt | Out-Null
+          Copy-Item -Recurse -Force .github support-receipt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-138-http-evidence
+          path: |
+            http-on
+            http-off
+            support-receipt
+          include-hidden-files: true
           retention-days: 3
           if-no-files-found: error
