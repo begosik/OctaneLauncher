@@ -1,0 +1,50 @@
+name: Verify signed Octane 1.2.41 recovery
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'transport141/**'
+      - '.github/scripts/*141*'
+      - '.github/workflows/release-141.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: octane-141-validation
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct the signed public package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.40 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.40_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Public baseline download failed' }
+          python .github/scripts/assemble_141.py transport141/1.2.41 received
+          if ($LASTEXITCODE -ne 0) { throw 'Public package verification failed' }
+          python .github/scripts/extract_native141.py RA3Octane_1.2.40_Players_Compact.zip received/RA3Octane_1.2.41_Players_Compact.zip transport141/1.2.41/manifest.json native-fixture
+          if ($LASTEXITCODE -ne 0) { throw 'Public fixture extraction failed' }
+      - name: Native launcher, update worker and rollback
+        shell: pwsh
+        run: .github/scripts/windows_141.ps1 -Package received/RA3Octane_1.2.41_Players_Compact.zip -Baseline RA3Octane_1.2.40_Players_Compact.zip -Output native-results
+      - name: Real DLL recovery, startup repair, game termination and independent guardian
+        shell: pwsh
+        run: .github/scripts/battlenet_141.ps1 -Package received/RA3Octane_1.2.41_Players_Compact.zip -PatchedFixture native-fixture/patched.dll -Output bn-results
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-141-native-evidence
+          path: |
+            received
+            native-results
+            bn-results
+          retention-days: 7
+          if-no-files-found: error
