@@ -69,10 +69,17 @@ try{
  $log=Join-Path $v.root 'Logs\launcher.log'
  Until {[IO.File]::ReadAllText($log).Contains('[BATTLENET] Session patch verified.')} 'mandatory patch before real launch attempt' 30|Out-Null
  Check ([IO.File]::ReadAllText($log).Contains('[BATTLENET] Session patch verified.')) 'Old AutoPatch=0 cannot disable patching on a real LAUNCH GAME action'
- Until {(DllHash)-eq$original} 'failed or short real engine launch restores original' 30|Out-Null
- Check ((DllHash)-eq$original) 'The real launch attempt restores the DLL after failure/termination'
- $dialog=[OctaneNativeTest]::Window($v.p.Id,'#32770');if($dialog-ne[IntPtr]::Zero){[OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null;Start-Sleep -Milliseconds 200}
+ # The RA3 image can remain alive in a missing-assets dialog on a hosted runner.
+ # End that exact controlled process; do not mistake a live process for an exit.
  $runtime=Join-Path $env:LOCALAPPDATA 'Begosik\RA3Octane\Sessions\session-runtime\Data\ra3_1.12.game'
+ $started=Until {Get-Process -ErrorAction SilentlyContinue|Where-Object{$_.Path-eq$runtime}|Select-Object -First 1} 'actual isolated RA3 process' 20
+ Check ($null-ne$started) 'LAUNCH GAME starts the real isolated .game image'
+ Check ((DllHash)-eq$patched) 'Actual live Octane process has the patched BattleNet DLL on disk'
+ $pe=[IO.File]::ReadAllBytes($runtime);$peoff=[BitConverter]::ToInt32($pe,60)
+ Check (([BitConverter]::ToUInt16($pe,$peoff+22)-band0x20)-ne0) 'Actual launcher-created session retains the automatic 4GB flag'
+ Stop-Process -Id $started.Id -Force;$started.WaitForExit()
+ RestoreDone 'Real Octane launch restores original after force-terminating its exact game process'
+ $dialog=[OctaneNativeTest]::Window($v.p.Id,'#32770');if($dialog-ne[IntPtr]::Zero){[OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null;Start-Sleep -Milliseconds 200}
  Check (Test-Path $runtime) 'Session executable remains on disk after the game launch ends'
  Copy-Item $log (Join-Path $Output 'battle-net-lifecycle.log')
  CloseMain $v;$v=$null;RestoreDone 'Launcher shutdown rechecks original DLL'
