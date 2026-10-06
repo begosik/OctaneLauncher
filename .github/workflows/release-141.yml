@@ -1,4 +1,4 @@
-name: Verify signed Octane 1.2.41 recovery
+name: Verify and publish signed Octane 1.2.41 recovery
 on:
   push:
     branches: [main]
@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: octane-141-validation
+  group: octane-public-release
   cancel-in-progress: false
 jobs:
   verify:
@@ -46,5 +46,67 @@ jobs:
             received
             native-results
             bn-results
+          retention-days: 7
+          if-no-files-found: error
+  publish:
+    needs: verify
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Publish the exact signed archive, read it back and keep the description empty
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: |
+          gh release download v1.2.40 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.40_Players_Compact.zip --clobber
+          python3 .github/scripts/assemble_141.py transport141/1.2.41 published publish
+          gh api repos/begosik/OctaneLauncher/releases/latest > published/latest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-141-publication-receipt
+          path: published
+          retention-days: 7
+          if-no-files-found: error
+  http-update:
+    needs: publish
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Download public baseline and independent reference
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release download v1.2.40 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.40_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Public baseline download failed' }
+          gh release download v1.2.41 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.41_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Published reference download failed' }
+          if ((Get-FileHash RA3Octane_1.2.41_Players_Compact.zip).Hash.ToLowerInvariant() -ne '59ba5e8e025348626de10fd2e3359c01f654c538df79c218d880b24adbcc36f6') { throw 'Published archive identity mismatch' }
+      - name: Real launcher WinHTTP download, installation and restart
+        shell: pwsh
+        run: .github/scripts/windows_141.ps1 -Package RA3Octane_1.2.41_Players_Compact.zip -Baseline RA3Octane_1.2.40_Players_Compact.zip -Output http-results -Mode http
+      - name: Preserve public test support
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force receipt-support | Out-Null
+          Copy-Item -Recurse -Force .github receipt-support
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-141-http-evidence
+          path: |
+            http-results
+            receipt-support
+          include-hidden-files: true
           retention-days: 7
           if-no-files-found: error
