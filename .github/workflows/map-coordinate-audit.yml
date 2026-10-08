@@ -1,0 +1,43 @@
+name: Read-only map coordinate investigation
+on:
+  push:
+    branches: ['audit/map-coordinate-range-20261008']
+    paths: ['.github/scripts/map_coordinate_audit.py', '.github/workflows/map-coordinate-audit.yml']
+permissions:
+  contents: read
+concurrency:
+  group: map-coordinate-investigation
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Prepare the already-public signed release and fixture
+        shell: pwsh
+        run: |
+          python -m pip install pefile==2024.8.26 capstone==5.0.3
+          if ($LASTEXITCODE -ne 0) { throw 'Analysis dependencies unavailable' }
+          python .github/scripts/assemble_141.py transport141/1.2.41 received
+          if ($LASTEXITCODE -ne 0) { throw 'Public signature or hash verification failed' }
+          python .github/scripts/extract_native141.py RA3Octane_1.2.40_Players_Compact.zip received/RA3Octane_1.2.41_Players_Compact.zip transport141/1.2.41/manifest.json native-fixture
+          if ($LASTEXITCODE -ne 0) { throw 'Public fixture extraction failed' }
+      - name: Create real session image through the native launcher in isolated temporary folders
+        shell: pwsh
+        run: .github/scripts/battlenet_141.ps1 -Package received/RA3Octane_1.2.41_Players_Compact.zip -PatchedFixture native-fixture/patched.dll -Output bn-results
+      - name: Inspect coordinate packing and spatial code in the actual session image
+        if: always()
+        shell: pwsh
+        run: python .github/scripts/map_coordinate_audit.py "$env:RUNNER_TEMP"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: coordinate-audit-evidence
+          path: |
+            coordinate-audit-results
+            bn-results/BATTLENET_141.json
+          retention-days: 7
+          if-no-files-found: error
