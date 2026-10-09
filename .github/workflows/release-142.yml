@@ -1,0 +1,80 @@
+name: Verify and publish signed Octane 1.2.42 Community support
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'transport142/**'
+      - '.github/scripts/*142*'
+      - '.github/workflows/release-142.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: octane-public-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct and verify the signed public package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.41 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.41_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Public baseline download failed' }
+          python .github/scripts/assemble_142.py transport142/1.2.42 received
+          if ($LASTEXITCODE -ne 0) { throw 'Public package verification failed' }
+          if ((Get-FileHash received/RA3Octane_1.2.42_Players_Compact.zip).Hash.ToLowerInvariant() -ne 'd94d1f64de84011aada52ca76cc856142b51149fd26f527d87b051b357cc81d2') { throw 'Signed archive identity mismatch' }
+          python .github/scripts/extract_native141.py RA3Octane_1.2.41_Players_Compact.zip received/RA3Octane_1.2.42_Players_Compact.zip transport142/1.2.42/manifest.json native-fixture
+          if ($LASTEXITCODE -ne 0) { throw 'Public fixture extraction failed' }
+      - name: Final binary Community detection, config order and mod exclusion
+        shell: pwsh
+        run: .github/scripts/community_142.ps1 -Package received/RA3Octane_1.2.42_Players_Compact.zip -Output community-results
+      - name: Native launcher, update worker and rollback
+        shell: pwsh
+        run: .github/scripts/windows_142.ps1 -Package received/RA3Octane_1.2.42_Players_Compact.zip -Baseline RA3Octane_1.2.41_Players_Compact.zip -Output native-results
+      - name: Preserve independent BattleNet recovery
+        shell: pwsh
+        run: .github/scripts/battlenet_141.ps1 -Package received/RA3Octane_1.2.42_Players_Compact.zip -PatchedFixture native-fixture/patched.dll -Output bn-results
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-142-native-evidence
+          path: |
+            received
+            community-results
+            native-results
+            bn-results
+          retention-days: 7
+          if-no-files-found: error
+  publish:
+    needs: verify
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Publish exact verified signed archive with empty description
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: |
+          gh release download v1.2.41 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.41_Players_Compact.zip --clobber
+          python3 .github/scripts/assemble_142.py transport142/1.2.42 published publish
+          gh api repos/begosik/OctaneLauncher/releases/latest > published/latest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-142-publication-receipt
+          path: published
+          retention-days: 7
+          if-no-files-found: error
