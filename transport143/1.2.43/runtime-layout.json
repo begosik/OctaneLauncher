@@ -1,0 +1,20 @@
+{
+  "image_base": 4194304,
+  "runtime_log_options_file_offset": 9916416,
+  "runtime_log_options_bytes": 2064,
+  "runtime_log_options_schema": 1,
+  "runtime_log_enabled_offset": 12,
+  "runtime_log_directory_offset": 16,
+  "runtime_log_directory_chars": 1024,
+  "fps_payload_hash_start": 9609216,
+  "fps_payload_hash_bytes": 311296,
+  "fps_payload_hash_record": 9920568,
+  "exports": {
+    "lab_config": 14747756,
+    "LabCompareObserver": 14457456,
+    "GPUTimePublish": 14455040,
+    "GPUTimeRead": 14455280,
+    "gpu_clock_ms": 15272888
+  },
+  "unbound_session_sha256": "472b91355dba703b2ae2c47ce6689a5cadf70e6911bfa5da4ce768348be8c3ef"
+}
