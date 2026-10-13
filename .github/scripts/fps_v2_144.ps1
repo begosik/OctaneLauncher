@@ -82,7 +82,7 @@ function ValidateImage([string]$label){
  [Array]::Copy([BitConverter]::GetBytes([FPSArtifactChecksum]::Sum($neutral,$po+88)),0,$neutral,$po+88,4)
  Check ((HexBytes (HashBytes $neutral))-eq$cfg.unbound_session_sha256) ($label+' entire runtime differs from the profile-derived 4GB image only by the approved log binding')
  $launchLog=[IO.File]::ReadAllText((Join-Path $view.root 'Logs\launcher.log'))
- Check ($launchLog.Contains('60 FPS v2 1.0.1')) ($label+' launch metadata identifies the requested FPS version')
+ Check ($launchLog.Contains('[BUILD] package='+$cfg.package_label)) ($label+' launch metadata identifies the authenticated package label')
  Check ($launchLog.Contains('[BUILD] fps_profile_v2_1_0_1_sha256='+$cfg.profile_component_sha256)) ($label+' launch metadata records the exact supplied RPF fingerprint')
  [ordered]@{label=$label;runtime_sha256=(HexBytes (HashBytes $pe));unbound_sha256=(HexBytes (HashBytes $neutral));log_directory=$bound;sections=@($sections|ForEach-Object{$_.name})}|ConvertTo-Json -Depth 6|Set-Content (Join-Path $Output ($label+'-runtime.json')) -Encoding UTF8
  Copy-Item (Join-Path $view.root 'Logs\launcher.log') (Join-Path $Output ($label+'-launcher.log'))

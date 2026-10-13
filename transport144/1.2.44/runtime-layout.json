@@ -26,5 +26,6 @@
   "profile_component_sha256": "6befd6840e36f314a1648a3cd31451e477dde0116caa498f59bbfe9a77ab4743",
   "runtime_log_stems": [
     "fpslab-E20-sync-mode"
-  ]
+  ],
+  "package_label": "V134Z/JOIN8 + 60FPS v2 1.0.1 / Octane 1.2.44"
 }
