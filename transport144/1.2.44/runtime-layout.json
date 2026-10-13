@@ -1,0 +1,30 @@
+{
+  "image_base": 4194304,
+  "runtime_log_options_file_offset": 9916416,
+  "runtime_log_options_bytes": 2064,
+  "runtime_log_options_schema": 1,
+  "runtime_log_enabled_offset": 12,
+  "runtime_log_directory_offset": 16,
+  "runtime_log_directory_chars": 1024,
+  "fps_payload_hash_start": 9609216,
+  "fps_payload_hash_bytes": 311296,
+  "fps_payload_hash_record": 9920568,
+  "exports": {
+    "lab_config": 14747756,
+    "LabCompareObserver": 14457328,
+    "GPUTimePublish": 14454912,
+    "GPUTimeRead": 14455152,
+    "gpu_clock_ms": 15272932,
+    "BeamClockDivide": 14485648,
+    "FloatingFrame": 14452608,
+    "FloatingAge": 14452656,
+    "FlagAnimRate": 14452704,
+    "floating_frames_ms": 14733324
+  },
+  "unbound_session_sha256": "e53ef07af8562346c54138e33b47ed0a2b7a47eff490f5829280288531e9bd2b",
+  "profile_component_bytes": 381158,
+  "profile_component_sha256": "6befd6840e36f314a1648a3cd31451e477dde0116caa498f59bbfe9a77ab4743",
+  "runtime_log_stems": [
+    "fpslab-E20-sync-mode"
+  ]
+}
