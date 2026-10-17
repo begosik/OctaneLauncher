@@ -1,0 +1,402 @@
+{
+  "image_base": 4194304,
+  "runtime_log_options_file_offset": 9916416,
+  "runtime_log_options_bytes": 2064,
+  "runtime_log_options_schema": 1,
+  "runtime_log_enabled_offset": 12,
+  "runtime_log_directory_offset": 16,
+  "runtime_log_directory_chars": 1024,
+  "fps_payload_hash_start": 9609216,
+  "fps_payload_hash_bytes": 311296,
+  "fps_payload_hash_record": 9920568,
+  "exports": {
+    "lab_config": 14747756
+  },
+  "unbound_session_sha256": "bf4f61c206cd4a422b78a64a78412d4a52b75f2457c0b24470bb0027bab387d2",
+  "package_label": "V134Z/JOIN8 + 60FPS 1.0.11 / Octane 1.2.45",
+  "profile_component_bytes": 380853,
+  "profile_component_sha256": "a43ab64478fbc569025ef104c9d0b92853506a8ce959f5477d881a05bcb7ac89",
+  "profile_component_edits": 75,
+  "profile_component_guards": 78,
+  "profile_log_field": "fps_profile_1_0_11_sha256",
+  "patched_instruction_checks": [
+    {
+      "name": "profile edit 01 at 0x0052AF30",
+      "va": 5418800,
+      "bytes": "e90bd6890090"
+    },
+    {
+      "name": "profile edit 02 at 0x00CB409C",
+      "va": 13320348,
+      "bytes": "3c000000"
+    },
+    {
+      "name": "profile edit 03 at 0x0077922C",
+      "va": 7836204,
+      "bytes": "f30f1005f80dce00f30f5905d061be00"
+    },
+    {
+      "name": "profile edit 04 at 0x00754429",
+      "va": 7685161,
+      "bytes": "f30f1025f80dce00f30f5925d061be00"
+    },
+    {
+      "name": "profile edit 05 at 0x007B700B",
+      "va": 8089611,
+      "bytes": "f30f101df80dce00f30f591dd061be00"
+    },
+    {
+      "name": "profile edit 06 at 0x00655166",
+      "va": 6639974,
+      "bytes": "b8020000009090909090909090"
+    },
+    {
+      "name": "profile edit 07 at 0x0064167D",
+      "va": 6559357,
+      "bytes": "b8020000009090909090909090"
+    },
+    {
+      "name": "profile edit 08 at 0x0063EA20",
+      "va": 6548000,
+      "bytes": "b8020000009090909090909090"
+    },
+    {
+      "name": "profile edit 09 at 0x0064169C",
+      "va": 6559388,
+      "bytes": "e9df7a7800909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090"
+    },
+    {
+      "name": "profile edit 10 at 0x0063329D",
+      "va": 6501021,
+      "bytes": "e80e5d7900"
+    },
+    {
+      "name": "profile edit 11 at 0x006339FB",
+      "va": 6502907,
+      "bytes": "e8604d79009090"
+    },
+    {
+      "name": "profile edit 12 at 0x00633865",
+      "va": 6502501,
+      "bytes": "e8f64e7900896c24149090"
+    },
+    {
+      "name": "profile edit 13 at 0x00600362",
+      "va": 6292322,
+      "bytes": "e829057d0090"
+    },
+    {
+      "name": "profile edit 14 at 0x0060B79B",
+      "va": 6338459,
+      "bytes": "e8f0507c0090"
+    },
+    {
+      "name": "profile edit 15 at 0x00A32E82",
+      "va": 10694274,
+      "bytes": "e8f95839009090"
+    },
+    {
+      "name": "profile edit 16 at 0x00A2D37D",
+      "va": 10670973,
+      "bytes": "e8feb339009090"
+    },
+    {
+      "name": "profile edit 17 at 0x00A32E9D",
+      "va": 10694301,
+      "bytes": "0cd0e000"
+    },
+    {
+      "name": "profile edit 18 at 0x00A1F729",
+      "va": 10614569,
+      "bytes": "e882903a00"
+    },
+    {
+      "name": "profile edit 19 at 0x0094C22A",
+      "va": 9749034,
+      "bytes": "e8b1c5470090"
+    },
+    {
+      "name": "profile edit 20 at 0x006F5AA2",
+      "va": 7297698,
+      "bytes": "e8b92c6d009090"
+    },
+    {
+      "name": "profile edit 21 at 0x006F5ADC",
+      "va": 7297756,
+      "bytes": "e87f2c6d009090"
+    },
+    {
+      "name": "profile edit 22 at 0x00931160",
+      "va": 9638240,
+      "bytes": "00d0e000"
+    },
+    {
+      "name": "profile edit 23 at 0x00628AFC",
+      "va": 6458108,
+      "bytes": "00d0e000"
+    },
+    {
+      "name": "profile edit 24 at 0x006FFDAC",
+      "va": 7339436,
+      "bytes": "04d0e000"
+    },
+    {
+      "name": "profile edit 25 at 0x0070C0FC",
+      "va": 7389436,
+      "bytes": "08d0e000"
+    },
+    {
+      "name": "profile edit 26 at 0x004D7BC0",
+      "va": 5077952,
+      "bytes": "e9bb148f0090"
+    },
+    {
+      "name": "profile edit 27 at 0x004D7BC8",
+      "va": 5077960,
+      "bytes": "e40be900"
+    },
+    {
+      "name": "profile edit 28 at 0x006FFD90",
+      "va": 7339408,
+      "bytes": "e40be900"
+    },
+    {
+      "name": "profile edit 29 at 0x006FFD96",
+      "va": 7339414,
+      "bytes": "e40be900"
+    },
+    {
+      "name": "profile edit 30 at 0x0070C0F4",
+      "va": 7389428,
+      "bytes": "e877d06b00"
+    },
+    {
+      "name": "profile edit 31 at 0x0063DB2D",
+      "va": 6544173,
+      "bytes": "6a01e82cab780050909090909090909090"
+    },
+    {
+      "name": "profile edit 32 at 0x0063DB71",
+      "va": 6544241,
+      "bytes": "56e8e9aa780050909090909090909090909090909090"
+    },
+    {
+      "name": "profile edit 33 at 0x006F9385",
+      "va": 7312261,
+      "bytes": "83c410e8d3f36c009090"
+    },
+    {
+      "name": "profile edit 34 at 0x006F9449",
+      "va": 7312457,
+      "bytes": "e812f36c009090"
+    },
+    {
+      "name": "profile edit 35 at 0x0092D06D",
+      "va": 9621613,
+      "bytes": "e8eeb649009090"
+    },
+    {
+      "name": "profile edit 36 at 0x0092D149",
+      "va": 9621833,
+      "bytes": "e812b649009090"
+    },
+    {
+      "name": "profile edit 37 at 0x00617DDC",
+      "va": 6389212,
+      "bytes": "e87f097b009090"
+    },
+    {
+      "name": "profile edit 38 at 0x0055BA75",
+      "va": 5618293,
+      "bytes": "e866ce8600"
+    },
+    {
+      "name": "profile edit 39 at 0x0055BAB0",
+      "va": 5618352,
+      "bytes": "e83bce8600"
+    },
+    {
+      "name": "profile edit 40 at 0x00568220",
+      "va": 5669408,
+      "bytes": "e91b7f8600"
+    },
+    {
+      "name": "profile edit 41 at 0x00568554",
+      "va": 5670228,
+      "bytes": "e8b703860090909090909090909090909090909090909090909090909090909090909090909090909090909090909090"
+    },
+    {
+      "name": "profile edit 42 at 0x00D6ACAF",
+      "va": 14068911,
+      "bytes": "e93ced05009090"
+    },
+    {
+      "name": "profile edit 43 at 0x0064178F",
+      "va": 6559631,
+      "bytes": "e9fc7d780090"
+    },
+    {
+      "name": "profile edit 44 at 0x006656C8",
+      "va": 6706888,
+      "bytes": "e9b39b760090"
+    },
+    {
+      "name": "profile edit 45 at 0x0063DC59",
+      "va": 6544473,
+      "bytes": "e8921c7900"
+    },
+    {
+      "name": "profile edit 46 at 0x00570D05",
+      "va": 5704965,
+      "bytes": "e936ec85009090909090"
+    },
+    {
+      "name": "profile edit 47 at 0x00570D31",
+      "va": 5705009,
+      "bytes": "e81af78500"
+    },
+    {
+      "name": "profile edit 48 at 0x00570D6D",
+      "va": 5705069,
+      "bytes": "e89ef78500"
+    },
+    {
+      "name": "profile edit 49 at 0x00925AAB",
+      "va": 9591467,
+      "bytes": "e8c09e4a00"
+    },
+    {
+      "name": "profile edit 50 at 0x0093120B",
+      "va": 9638411,
+      "bytes": "e890e74900"
+    },
+    {
+      "name": "profile edit 51 at 0x00938B82",
+      "va": 9669506,
+      "bytes": "e8e96d4900"
+    },
+    {
+      "name": "profile edit 52 at 0x0094C2D5",
+      "va": 9749205,
+      "bytes": "e826374800"
+    },
+    {
+      "name": "profile edit 53 at 0x0073B9A6",
+      "va": 7584166,
+      "bytes": "e8b5406900"
+    },
+    {
+      "name": "profile edit 54 at 0x00569721",
+      "va": 5674785,
+      "bytes": "e8fa628600"
+    },
+    {
+      "name": "profile edit 55 at 0x00A4973D",
+      "va": 10786621,
+      "bytes": "e8de623800"
+    },
+    {
+      "name": "profile edit 56 at 0x00A49896",
+      "va": 10786966,
+      "bytes": "e885613800"
+    },
+    {
+      "name": "profile edit 57 at 0x00A4BDDE",
+      "va": 10796510,
+      "bytes": "e83d3c3800"
+    },
+    {
+      "name": "profile edit 58 at 0x00A50040",
+      "va": 10813504,
+      "bytes": "e8dbf93700"
+    },
+    {
+      "name": "profile edit 59 at 0x00A50416",
+      "va": 10814486,
+      "bytes": "e805f63700"
+    },
+    {
+      "name": "profile edit 60 at 0x0056996F",
+      "va": 5675375,
+      "bytes": "e8cc608600"
+    },
+    {
+      "name": "profile edit 61 at 0x00A1BEE3",
+      "va": 10600163,
+      "bytes": "e8583b3b00"
+    },
+    {
+      "name": "profile edit 62 at 0x00A496F7",
+      "va": 10786551,
+      "bytes": "e844633800"
+    },
+    {
+      "name": "profile edit 63 at 0x00938CFA",
+      "va": 9669882,
+      "bytes": "e9416f4900909090909090"
+    },
+    {
+      "name": "profile edit 64 at 0x00938FE1",
+      "va": 9670625,
+      "bytes": "e90a714900909090"
+    },
+    {
+      "name": "profile edit 65 at 0x007EFBBC",
+      "va": 8321980,
+      "bytes": "e83ff55d00"
+    },
+    {
+      "name": "profile edit 66 at 0x004F11FD",
+      "va": 5181949,
+      "bytes": "e96edf8d0090"
+    },
+    {
+      "name": "profile edit 67 at 0x004F0A10",
+      "va": 5179920,
+      "bytes": "e98be78d0090"
+    },
+    {
+      "name": "profile edit 68 at 0x004EDED0",
+      "va": 5168848,
+      "bytes": "e9fb128e00"
+    },
+    {
+      "name": "profile edit 69 at 0x0063C373",
+      "va": 6538099,
+      "bytes": "e8882e7900"
+    },
+    {
+      "name": "profile edit 70 at 0x004D91B1",
+      "va": 5083569,
+      "bytes": "e97a608f00909090"
+    },
+    {
+      "name": "profile edit 71 at 0x004D7CEA",
+      "va": 5078250,
+      "bytes": "e9816d8f00"
+    },
+    {
+      "name": "profile edit 72 at 0x004E0F99",
+      "va": 5115801,
+      "bytes": "e832e18e00"
+    },
+    {
+      "name": "profile edit 73 at 0x004EDBE0",
+      "va": 5168096,
+      "bytes": "e9ab148e00"
+    },
+    {
+      "name": "profile edit 74 at 0x004DBE5A",
+      "va": 5095002,
+      "bytes": "e9e1e18e009090"
+    },
+    {
+      "name": "profile edit 75 at 0x00570C30",
+      "va": 5704752,
+      "bytes": "0f83dabf8900"
+    }
+  ],
+  "runtime_log_stems": [
+    "fpslab-E20-sync-mode"
+  ]
+}
