@@ -33,6 +33,10 @@ try{
  Write-Host ('Prepared public runtime SHA256 '+(Get-FileHash -LiteralPath $copy).Hash)
  & python .github/scripts/position_bounds_audit.py $copy $Output
  if($LASTEXITCODE-ne0){throw 'Read-only position disassembly failed'}
+ & python -m pip install --disable-pip-version-check unicorn==2.1.4
+ if($LASTEXITCODE-ne0){throw 'Pinned x86 emulator dependency unavailable'}
+ & python .github/scripts/position_bounds_probe.py $copy $Output
+ if($LASTEXITCODE-ne0){throw 'Original coordinate guard probe failed'}
 }finally{
  if($launcher-and!$launcher.HasExited){
   $null=$launcher.CloseMainWindow()
