@@ -1,0 +1,45 @@
+name: Read-only position bounds audit
+on:
+  push:
+    branches: ['analysis/position-bounds-20261026']
+    paths:
+      - '.github/scripts/position_bounds_audit.py'
+      - '.github/scripts/prepare_position_audit.ps1'
+      - '.github/workflows/position-bounds-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: octane-position-bounds-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    if: github.repository == 'begosik/OctaneLauncher'
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Obtain exact already-public launcher package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.49 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.49_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Public package download failed' }
+          if ((Get-FileHash RA3Octane_1.2.49_Players_Compact.zip).Hash.ToLowerInvariant() -ne '92cba8e90f03b0bbe2dfd5e3601865ccd740e54111595f459889a1df452d4e4a') { throw 'Unexpected public archive identity' }
+          python -m pip install --disable-pip-version-check capstone==5.0.6 pefile==2024.8.26
+          if ($LASTEXITCODE -ne 0) { throw 'Analysis dependencies unavailable' }
+      - name: Prepare public runtime and inspect coordinate assertion cross-references
+        shell: pwsh
+        run: .github/scripts/prepare_position_audit.ps1 -Package RA3Octane_1.2.49_Players_Compact.zip -Output position-evidence
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: position-bounds-read-only-evidence
+          path: |
+            position-evidence/*.txt
+            position-evidence/*.json
+          retention-days: 3
+          if-no-files-found: warn
