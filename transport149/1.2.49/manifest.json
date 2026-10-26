@@ -1,0 +1,48 @@
+{
+  "version": "1.2.49",
+  "base_version": "1.2.48",
+  "base_zip_sha256": "fc8097e9bffcce4d0f9f72b6fecdeb22e4c630309a7da56658d8d602e3ab4e2e",
+  "base_exe_sha256": "d386d5d7d2221da7adc711c24ab80bee93a6e7895b3bd6ef6fc6b9446f38ef7b",
+  "client_material_offsets": [
+    237184,
+    237152
+  ],
+  "deltas": {
+    "exe": {
+      "files": [
+        "exe00.b64"
+      ],
+      "delta_bytes": 311,
+      "compressed_bytes": 272,
+      "sha256": "51673c6e1fc9dab0d0932526c9049cb61e5cc0258de611939ad6c2fceeadb686",
+      "compression": "xz"
+    },
+    "pack": {
+      "files": [
+        "pack00.b64"
+      ],
+      "delta_bytes": 430,
+      "compressed_bytes": 480,
+      "sha256": "28702978acfd007e9f96726aa401dbe1baf2c0ec1caca006b439a2dcc7bd86b1",
+      "compression": "xz"
+    }
+  },
+  "pack_header": "T0NUUEFDSzFU4hoQT9DPpIQUGygRArImMNlrAAAAAAA=",
+  "pack_tail": "1TR5vmP/tUqQSsaeXRIDQjeckyMpxWzNqmBFPYn/3PMfyK/hEce5QvRfGIlwy4QA69ejYGiy/9q0uQjsDGdcxUepfWxmEKmBhdzZeQbcSG/6DrRdNtoqoIze/Oe85z+Lbk0TiYW6eA3+DLQ7ECnoV1bV9hfNAnwLR3bx1pJzF4cXqQWH3anYDOz0Lhq8FmYVNJ2lE5JpJyjOk85ntURL81kqLHEo90W6EenRDZQKh6uZttzncPc78v/Tm8K/2yB/21uBXpAejLJTh9ZhqfGATMUrevbSArChJoLpKAh6mumIQYNoi8wpBvGc300DB3bgT/dSjr0cV8KJUm4WEdqarB35FhefrQ4kR5YpdBjugTKABtWw6K6pvyUdXaGoGvLLwWu2Xa8NBXeKx+7J6c4Bgt+KlEwg498TJuTHR3fSFuZZsLlUBMz0V1CiwjuDqNY3qTWtXcAHT6kdo4v3gfVX813kVHxqK7wpLubg64ymfuA+y3pJaMe4MbbwxyP/jQlhd1JbX6HeNWusP6AAv0SQLyzOrAdSEndTI/Kmimao06k=",
+  "manifest": "T0NUUkVMMDIBAAAAAgAAADEAAAACAAAAMQBPY3RhbmUgMS4yLjQ5IC8gOFAgKyBGUFMgMS4wLjIyICsgQ29tbXVuaXR5IFBhdGNoDQBSQTNPY3RhbmUuZXhlADYFAAAAAAAsI90rNY62JXgwMsw7y3h/sSf/f983sdkX7okVLKNlDw8AcGF0Y2hlcy5vY3RwYWNr8NprAAAAAADG0EAQRuGT1TNFC02q53UV0SxgakCus/GWbiLP1P4re5mQQZCwEdrs8iHT8MOlxZiN6t6IawPCa7R0Zl4K6nHC5SB7t6aa/b8BHXrtADwQ5lTLCMY0enbtPLwrqGY8NtONrnpsEzINjzGKFbjWuEdHzARi2SDGBxniiPqiku3CZLDduswYW01Asl2qYR4AGhgD7zB864dHc3Qn61LC9a/upKBlige6kpTkV3cHyQ8faLxIWoLMSo+Gdm3a8FiJSs1M4KxlYfipCqJufkEemNo7eGrM2L/kA0Ockg0qSB5Cwd4A0Hhm7TbJUHQheYENFs6B2czImcU+zxHVs7Jm+ZKbeg92o03HJFatTl/1rCNV8mYRQGGmJyVeCDwh08gpUQN6jH2ppIN1251sxulgQS8uoi7LqFwd1fFbrg23Zay5Kt/7H5ZKLimuO+nTwxX0QI9zMNscHVWSdx22J1xl0VykVQvrhEvW3o2OvGtVplQeSlUs8hWX1568894j+s0yulZpNE6UnVHOKUqeZpr5z0IR9rbdJ8E+Ule0Lj46RPNVVQ==",
+  "files": {
+    "RA3Octane.exe": "2c23dd2b358eb625783032cc3bcb787fb127ff7fdf37b1d917ee89152ca3650f",
+    "patches.octpack": "c6d0401046e193d533450b4daae77515d12c606a40aeb3f1966e22cfd4fe2b7b",
+    "release.oct": "d9083667b32f0d1e24a30374721f9007767256c281bdf45b0f3af5610d895ba0"
+  },
+  "zip_timestamp": [
+    2026,
+    10,
+    26,
+    0,
+    0,
+    0
+  ],
+  "archive_bytes": 7410863,
+  "archive_sha256": "92cba8e90f03b0bbe2dfd5e3601865ccd740e54111595f459889a1df452d4e4a"
+}
