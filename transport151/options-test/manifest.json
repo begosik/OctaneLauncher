@@ -1,0 +1,86 @@
+{
+  "format": "OCTANE_OPTIONS_WINDOWS_TEST_151",
+  "file": "options_windows.exe",
+  "bytes": 50176,
+  "sha256": "232dde3771088ef12a48128417d65099c757ecd2980054c45a7c20c560252302",
+  "parts": [
+    "options00.b64",
+    "options01.b64",
+    "options02.b64",
+    "options03.b64",
+    "options04.b64",
+    "options05.b64",
+    "options06.b64"
+  ],
+  "imports": {
+    "user32.dll": [
+      "wsprintfW"
+    ],
+    "shell32.dll": [
+      "CommandLineToArgvW"
+    ],
+    "bcrypt.dll": [
+      "BCryptCloseAlgorithmProvider",
+      "BCryptCreateHash",
+      "BCryptDestroyHash",
+      "BCryptFinishHash",
+      "BCryptGetProperty",
+      "BCryptHashData",
+      "BCryptOpenAlgorithmProvider"
+    ],
+    "kernel32.dll": [
+      "CloseHandle",
+      "CreateDirectoryW",
+      "CreateFileW",
+      "CreateMutexW",
+      "CreateProcessW",
+      "ExitProcess",
+      "FindClose",
+      "FindFirstFileW",
+      "FindNextFileW",
+      "FlushFileBuffers",
+      "FormatMessageW",
+      "GetCommandLineW",
+      "GetExitCodeProcess",
+      "GetFileAttributesW",
+      "GetFileInformationByHandleEx",
+      "GetFileSizeEx",
+      "GetFileTime",
+      "GetLastError",
+      "GetModuleFileNameW",
+      "GetProcessHeap",
+      "GetProcessTimes",
+      "HeapAlloc",
+      "HeapFree",
+      "LocalFree",
+      "MoveFileExW",
+      "OpenProcess",
+      "ReadFile",
+      "ReleaseMutex",
+      "ResumeThread",
+      "SetFileInformationByHandle",
+      "Sleep",
+      "TerminateProcess",
+      "WaitForSingleObject",
+      "WideCharToMultiByte",
+      "WriteFile",
+      "lstrcmpiW"
+    ]
+  },
+  "production_guard_sha256": "c0d3434cded0edce9fb33850ed44f834285147987e705794b4e92585b74c3532",
+  "source_hashes": {
+    "src/options_guard.h": "c0d3434cded0edce9fb33850ed44f834285147987e705794b4e92585b74c3532",
+    "src/runtime.h": "6490a063aa5806c209533ac5b2b569aba117e9fb5ab27f9b3e56a23ac08105da",
+    "src/chkstk.s": "464538d38580ed4836e6761b72a96d6386dc46f3fdaf8382837bbc636f412370",
+    "tools/build_native.py": "65b40de403e85c41fab5e54e7dd5f660b533516dc728f644f6595eff32775893",
+    "src/persistent_file.h": "4791a532453aa6ae5723741da568629b873c0f0e05e81b241c15eefe2fe6af64",
+    "src/path_guard.h": "53c33c1b499767b05a03177b33eaa8d73d386e789c084ff6f5a2ebda2580db67",
+    "src/process_guard.h": "a10634eabd166b6967adfd91d3a9b54ab3052f214080c08253f0840546b36d28",
+    "src/winmini.h": "5a22502bf6ac82199cd8d64269e1c219fdfbd74214564aaf177a91d847841950",
+    "tests/1.2.51/results/options_windows_runtime.h": "87249cd6c9a2c0349857a840eb7867cd3db99f0bb777e07d03233428de9dab53",
+    "tests/1.2.51/results/options_windows_guard.h": "554f6c27c8537d108696859ce8c5de17308844637a059d33b2031c79f13286db",
+    "tests/1.2.51/options_windows.c": "20ed4997f7120f3f952c6143ee841dfa0e4292cd00fa919f11890933a2bfc3b5",
+    "tests/1.2.51/build_options_windows151.py": "7898e9874157c2e1322f42d595cbd94d2f7c1e65f1e5924d8f1ebcbaf5f9ca8b"
+  },
+  "scope": "Actual Windows file and process APIs; only game profile root resolution is redirected into an isolated test directory. This test executable is not a release asset."
+}
