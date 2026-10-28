@@ -35,7 +35,9 @@ function CompleteStoppedLaunch($view,[string]$exitHex,[string]$label){
  Until {[IO.File]::ReadAllText($logPath).Contains($expected)} ($label+' launch worker reports completed abnormal exit') 30|Out-Null
  $dialog=Until {$d=[OctaneNativeTest]::Title($view.p.Id,'RA3 // OCTANE');if($d-ne[IntPtr]::Zero-and[OctaneNativeTest]::Class($d)-eq'#32770'){return $d}} ($label+' WM_DONE abnormal-exit dialog') 30
  Check ([Octane151ExitDialog]::Body($dialog).Contains($expected)) ($label+' completion dialog matches the actual terminated process exit code')
- Check ([OctaneNativeTest]::GetDlgItem($dialog,1)-ne[IntPtr]::Zero) ($label+' completion dialog exposes its OK action')
+ # EnumWindows can observe the dialog while MessageBox is still creating its children.
+ $ok=Until {$button=[OctaneNativeTest]::GetDlgItem($dialog,1);if($button-ne[IntPtr]::Zero-and[Octane151ExitDialog]::IsWindowEnabled($button)){return $button}} ($label+' completion dialog OK control ready') 15
+ Check ($ok-ne[IntPtr]::Zero-and[Octane151ExitDialog]::IsWindowEnabled($ok)) ($label+' completion dialog exposes its OK action')
  [OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null
  Until {![OctaneNativeTest]::IsWindow($dialog)-and[OctaneNativeTest]::IsWindow($view.w)-and[Octane151ExitDialog]::IsWindowEnabled($view.w)} ($label+' completion dialog dismissed and launcher enabled') 15|Out-Null
  Check ([Octane151ExitDialog]::IsWindowEnabled($view.w)) ($label+' launcher returns to enabled UI before normal close')
