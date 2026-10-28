@@ -12,6 +12,10 @@ public static class Octane151ExitDialog {
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr w,StringBuilder b,int n);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr w,StringBuilder b,int n);
  [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr w);
+ [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr w);
+ [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr w);
+ public static IntPtr SingleButton(IntPtr dialog){IntPtr found=IntPtr.Zero;int count=0;EnumChildWindows(dialog,delegate(IntPtr w,IntPtr p){var cls=new StringBuilder(64);GetClassName(w,cls,cls.Capacity);if(cls.ToString()=="Button"&&IsWindowVisible(w)&&IsWindowEnabled(w)){found=w;count++;}return true;},IntPtr.Zero);return count==1?found:IntPtr.Zero;}
+ public static string Controls(IntPtr dialog){var text=new StringBuilder();EnumChildWindows(dialog,delegate(IntPtr w,IntPtr p){var cls=new StringBuilder(64);var label=new StringBuilder(4096);GetClassName(w,cls,cls.Capacity);GetWindowText(w,label,label.Capacity);text.AppendFormat("id={0}; class={1}; enabled={2}; visible={3}; text={4}\n",GetDlgCtrlID(w),cls,IsWindowEnabled(w),IsWindowVisible(w),label);return true;},IntPtr.Zero);return text.ToString();}
  public static string Body(IntPtr dialog){var text=new StringBuilder();EnumChildWindows(dialog,delegate(IntPtr w,IntPtr p){var cls=new StringBuilder(64);GetClassName(w,cls,cls.Capacity);if(cls.ToString()=="Static"){var b=new StringBuilder(4096);GetWindowText(w,b,b.Capacity);if(b.Length>0)text.AppendLine(b.ToString());}return true;},IntPtr.Zero);return text.ToString();}
 }
 '@
@@ -34,11 +38,14 @@ function CompleteStoppedLaunch($view,[string]$exitHex,[string]$label){
  $expected='The game exited with code 0x'+$exitHex+'. Logs are in the launcher Logs folder.'
  Until {[IO.File]::ReadAllText($logPath).Contains($expected)} ($label+' launch worker reports completed abnormal exit') 30|Out-Null
  $dialog=Until {$d=[OctaneNativeTest]::Title($view.p.Id,'RA3 // OCTANE');if($d-ne[IntPtr]::Zero-and[OctaneNativeTest]::Class($d)-eq'#32770'){return $d}} ($label+' WM_DONE abnormal-exit dialog') 30
+ # Use the observed button control, not the MessageBox return-value constant:
+ # a single OK dialog may use a different internal control ID.
+ $ok=Until {$button=[Octane151ExitDialog]::SingleButton($dialog);if($button-ne[IntPtr]::Zero-and[Octane151ExitDialog]::Body($dialog).Contains($expected)){return $button}} ($label+' completed message and single ready action') 15
  Check ([Octane151ExitDialog]::Body($dialog).Contains($expected)) ($label+' completion dialog matches the actual terminated process exit code')
- # EnumWindows can observe the dialog while MessageBox is still creating its children.
- $ok=Until {$button=[OctaneNativeTest]::GetDlgItem($dialog,1);if($button-ne[IntPtr]::Zero-and[Octane151ExitDialog]::IsWindowEnabled($button)){return $button}} ($label+' completion dialog OK control ready') 15
- Check ($ok-ne[IntPtr]::Zero-and[Octane151ExitDialog]::IsWindowEnabled($ok)) ($label+' completion dialog exposes its OK action')
- [OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null
+ Check ([OctaneNativeTest]::Text($ok).Replace('&','')-eq'OK') ($label+' completion dialog exposes its OK action')
+ $controlId=[Octane151ExitDialog]::GetDlgCtrlID($ok)
+ Write-Host ($label+' completion dialog controls: '+[Octane151ExitDialog]::Controls($dialog))
+ [OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]$controlId,$ok)|Out-Null
  Until {![OctaneNativeTest]::IsWindow($dialog)-and[OctaneNativeTest]::IsWindow($view.w)-and[Octane151ExitDialog]::IsWindowEnabled($view.w)} ($label+' completion dialog dismissed and launcher enabled') 15|Out-Null
  Check ([Octane151ExitDialog]::IsWindowEnabled($view.w)) ($label+' launcher returns to enabled UI before normal close')
 }
@@ -134,7 +141,7 @@ try{
  Stop-Process -Id $clientProcess.Id -Force;$clientProcess.WaitForExit();$clientProcess=$null
  Copy-Item $log (Join-Path $Output 'battle-net-lifecycle.log')
  CloseMain $v;$v=$null;RestoreDone 'Launcher shutdown rechecks original DLL'
-}catch{$Failure=$_.Exception.Message;Write-Host ('BN_TEST_FAILURE '+$Failure);Write-Host $_.ScriptStackTrace}
+}catch{$Failure=$_.Exception.Message;Write-Host ('BN_TEST_FAILURE '+$Failure);Write-Host $_.ScriptStackTrace;if($v){$d=[OctaneNativeTest]::Title($v.p.Id,'RA3 // OCTANE');if($d-ne[IntPtr]::Zero){Write-Host ([Octane151ExitDialog]::Controls($d));[OctaneNativeTest]::Screenshot($d,(Join-Path $Output 'failure-dialog.png'))|Write-Host}}}
 finally{
  if($started-and!$started.HasExited){Stop-Process -Id $started.Id -Force -ErrorAction SilentlyContinue}
  if($clientProcess-and!$clientProcess.HasExited){Stop-Process -Id $clientProcess.Id -Force -ErrorAction SilentlyContinue}
