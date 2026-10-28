@@ -4,6 +4,17 @@ $ErrorActionPreference='Stop';$Package=(Resolve-Path $Package).Path;$PatchedFixt
 $t=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'windows_public_test.ps1')).Replace("`r`n","`n")
 $a=$t.IndexOf("`$ErrorActionPreference='Stop'");$b=$t.IndexOf("`ntry {`n `$new=Extract");if($a-lt0-or$b-le$a){throw 'Unexpected native helper boundaries'}
 $Baseline=$Package;Invoke-Expression $t.Substring($a,$b-$a)
+Add-Type -TypeDefinition @'
+using System; using System.Text; using System.Runtime.InteropServices;
+public static class Octane151ExitDialog {
+ public delegate bool EnumProc(IntPtr w,IntPtr p);
+ [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr parent,EnumProc f,IntPtr p);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr w,StringBuilder b,int n);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr w,StringBuilder b,int n);
+ [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr w);
+ public static string Body(IntPtr dialog){var text=new StringBuilder();EnumChildWindows(dialog,delegate(IntPtr w,IntPtr p){var cls=new StringBuilder(64);GetClassName(w,cls,cls.Capacity);if(cls.ToString()=="Static"){var b=new StringBuilder(4096);GetWindowText(w,b,b.Capacity);if(b.Length>0)text.AppendLine(b.ToString());}return true;},IntPtr.Zero);return text.ToString();}
+}
+'@
 $env:APPDATA=Join-Path $Work 'Roaming';[IO.Directory]::CreateDirectory($env:APPDATA)|Out-Null
 $original='c3332145b101c72ee07f6a1741461b28df0a941e7ea82401c70522faab844c8a'
 $patched='00760f8f848ef5248fb4616b8eea64c8ee47aad48dff8fa2fee189a93ca45c52'
@@ -15,6 +26,20 @@ function RestoreDone([string]$why){Until {(DllHash)-eq$original} $why 15|Out-Nul
 function LaunchOne([string]$name){$r=Extract $Package $name;[IO.File]::WriteAllText((Join-Path $r 'settings.ini'),"[Launcher]`r`nGameDirectory=$game`r`nSkuDef=RA3_english_1.12.SkuDef`r`n[BattleNet]`r`nDirectory=$client`r`nAutoPatch=0`r`n[Firewall]`r`nRuntimeRule=1`r`n");return Launch $r}
 function GuardReady($view){$log=Join-Path $view.root 'Logs\launcher.log';Until {(Test-Path $log)-and[IO.File]::ReadAllText($log).Contains('Independent recovery guard ready;')} 'independent guard ready' 25|Out-Null}
 function ManualRestore($view){[OctaneNativeTest]::Click($view.w,856,520,1060,736);$dialog=Until {[OctaneNativeTest]::Title($view.p.Id,'Restore Original - Warning')} 'manual restore dialog';Check (([OctaneNativeTest]::SendMessage($dialog,0x400,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()-band65535)-eq2) 'Manual restore defaults to Cancel';[OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null}
+function CompleteStoppedLaunch($view,[string]$exitHex,[string]$label){
+ # Game termination precedes observer/log cleanup and WM_DONE. The unchanged
+ # CloseMain helper may run only after WM_DONE has displayed its expected
+ # abnormal-exit notification; an early WM_CLOSE instead opens a busy dialog.
+ $logPath=Join-Path $view.root 'Logs\launcher.log'
+ $expected='The game exited with code 0x'+$exitHex+'. Logs are in the launcher Logs folder.'
+ Until {[IO.File]::ReadAllText($logPath).Contains($expected)} ($label+' launch worker reports completed abnormal exit') 30|Out-Null
+ $dialog=Until {$d=[OctaneNativeTest]::Title($view.p.Id,'RA3 // OCTANE');if($d-ne[IntPtr]::Zero-and[OctaneNativeTest]::Class($d)-eq'#32770'){return $d}} ($label+' WM_DONE abnormal-exit dialog') 30
+ Check ([Octane151ExitDialog]::Body($dialog).Contains($expected)) ($label+' completion dialog matches the actual terminated process exit code')
+ Check ([OctaneNativeTest]::GetDlgItem($dialog,1)-ne[IntPtr]::Zero) ($label+' completion dialog exposes its OK action')
+ [OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null
+ Until {![OctaneNativeTest]::IsWindow($dialog)-and[OctaneNativeTest]::IsWindow($view.w)-and[Octane151ExitDialog]::IsWindowEnabled($view.w)} ($label+' completion dialog dismissed and launcher enabled') 15|Out-Null
+ Check ([Octane151ExitDialog]::IsWindowEnabled($view.w)) ($label+' launcher returns to enabled UI before normal close')
+}
 function SeedWhileRunning([int]$seconds,[int]$exitCode){
  $mutex=New-Object System.Threading.Mutex($false,'Local\Begosik.RA3Octane.BattleNet.IO.141');$taken=$false
  try{$taken=$mutex.WaitOne(10000);if(!$taken){throw 'Recovery IO mutex timeout'}
@@ -79,9 +104,10 @@ try{
  Check ($null-ne$started) 'Offline LAUNCH GAME starts the real isolated .game image'
  $pe=[IO.File]::ReadAllBytes($runtime);$peoff=[BitConverter]::ToInt32($pe,60)
  Check (([BitConverter]::ToUInt16($pe,$peoff+22)-band0x20)-ne0) 'Offline launcher-created session retains the automatic 4GB flag'
- Stop-Process -Id $started.Id -Force;$started.WaitForExit();$started=$null
+ $heldHandle=$started.Handle # Retain identity/exit status even if the PID disappears.
+ Stop-Process -Id $started.Id -Force;$started.WaitForExit();$exitHex=[Convert]::ToString([int]$started.ExitCode,16).PadLeft(8,'0');$started=$null
  RestoreDone 'Offline exit leaves the original BattleNet DLL intact'
- $dialog=[OctaneNativeTest]::Window($v.p.Id,'#32770');if($dialog-ne[IntPtr]::Zero){[OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null;Start-Sleep -Milliseconds 200}
+ CompleteStoppedLaunch $v $exitHex 'Offline'
  Check (Test-Path $runtime) 'Session executable remains on disk after offline launch ends'
  Copy-Item $log (Join-Path $Output 'offline-lifecycle.log')
  CloseMain $v;$v=$null
@@ -99,9 +125,10 @@ try{
  $started=Until {Get-Process -ErrorAction SilentlyContinue|Where-Object{$_.Path-eq$runtime}|Select-Object -First 1} 'actual isolated online-route RA3 process' 20
  Check ($null-ne$started) 'Running-client LAUNCH GAME starts the isolated .game image'
  Check ((DllHash)-eq$patched) 'Running-client launch has the exact patched DLL on disk'
- Stop-Process -Id $started.Id -Force;$started.WaitForExit();$started=$null
+ $heldHandle=$started.Handle # Retain identity/exit status even if the PID disappears.
+ Stop-Process -Id $started.Id -Force;$started.WaitForExit();$exitHex=[Convert]::ToString([int]$started.ExitCode,16).PadLeft(8,'0');$started=$null
  RestoreDone 'Running-client game exit restores the original DLL'
- $dialog=[OctaneNativeTest]::Window($v.p.Id,'#32770');if($dialog-ne[IntPtr]::Zero){[OctaneNativeTest]::PostMessage($dialog,0x111,[IntPtr]1,[IntPtr]::Zero)|Out-Null;Start-Sleep -Milliseconds 200}
+ CompleteStoppedLaunch $v $exitHex 'Running-client'
  Stop-Process -Id $clientProcess.Id -Force;$clientProcess.WaitForExit();$clientProcess=$null
  Copy-Item $log (Join-Path $Output 'battle-net-lifecycle.log')
  CloseMain $v;$v=$null;RestoreDone 'Launcher shutdown rechecks original DLL'
