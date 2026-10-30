@@ -1,0 +1,93 @@
+name: Verify and publish signed Octane 1.2.54 FPS1.0.30
+on:
+  push:
+    branches: [main, codex/fps130-154]
+    paths:
+      - 'transport154/**'
+      - '.github/scripts/*154*'
+      - '.github/workflows/release-154.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: octane-public-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'begosik/OctaneLauncher' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/fps130-154')
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Reconstruct and authenticate FPS1.0.30 with the retained FPS selector
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v1.2.53 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.53_Players_Compact.zip --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Public baseline download failed' }
+          python .github/scripts/assemble_154.py transport154/1.2.54 received
+          if ($LASTEXITCODE -ne 0) { throw 'Signed public package verification failed' }
+          python .github/scripts/extract_native141.py RA3Octane_1.2.53_Players_Compact.zip received/RA3Octane_1.2.54_Players_Compact.zip transport154/1.2.54/manifest.json native-fixture
+          if ($LASTEXITCODE -ne 0) { throw 'Public fixture extraction failed' }
+          python .github/scripts/verify_fps_profile154.py RA3Octane_1.2.53_Players_Compact.zip received/RA3Octane_1.2.54_Players_Compact.zip transport154/1.2.54/manifest.json transport154/1.2.54/runtime-layout.json profile-results/fingerprint.json
+          if ($LASTEXITCODE -ne 0) { throw 'Supplied FPS profile fingerprint verification failed' }
+          python .github/scripts/extract_observers154.py RA3Octane_1.2.53_Players_Compact.zip received/RA3Octane_1.2.54_Players_Compact.zip transport154/1.2.54/manifest.json transport154/1.2.54/runtime-layout.json observer-fixtures
+          if ($LASTEXITCODE -ne 0) { throw 'Embedded production observer verification failed' }
+      - name: Verify styled FPS selector, VSync and actual session bytes
+        shell: pwsh
+        run: .github/scripts/fps_slider154.ps1 -Package received/RA3Octane_1.2.54_Players_Compact.zip -Layout transport154/1.2.54/runtime-layout.json -Output fps-results
+      - name: Preserve Community detection, config order and mod exclusion
+        shell: pwsh
+        run: .github/scripts/community_142.ps1 -Package received/RA3Octane_1.2.54_Players_Compact.zip -Output community-results
+      - name: Native launcher, update worker and rollback
+        shell: pwsh
+        run: .github/scripts/windows_154.ps1 -Package received/RA3Octane_1.2.54_Players_Compact.zip -Baseline RA3Octane_1.2.53_Players_Compact.zip -Output native-results
+      - name: Verify offline routing and retain independent BattleNet recovery
+        shell: pwsh
+        run: .github/scripts/battlenet_154.ps1 -Package received/RA3Octane_1.2.54_Players_Compact.zip -PatchedFixture native-fixture/patched.dll -Output bn-results
+      - name: Verify Options recovery with actual Windows file and process APIs
+        shell: pwsh
+        run: .github/scripts/options_windows154.ps1 -Transport transport151/options-test -Output options-results
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: octane-154-native-evidence
+          path: |
+            received
+            fps-results
+            profile-results
+            observer-fixtures/observers.json
+            community-results
+            native-results
+            bn-results
+            options-results
+          retention-days: 7
+          if-no-files-found: error
+  publish:
+    needs: verify
+    if: github.repository == 'begosik/OctaneLauncher' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Publish exact verified signed archive with empty description
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: begosik/OctaneLauncher
+        run: |
+          gh release download v1.2.53 --repo begosik/OctaneLauncher --pattern RA3Octane_1.2.53_Players_Compact.zip --clobber
+          python3 .github/scripts/assemble_154.py transport154/1.2.54 published publish
+          gh api repos/begosik/OctaneLauncher/releases/latest > published/latest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: octane-154-publication-receipt
+          path: published
+          retention-days: 7
+          if-no-files-found: error
