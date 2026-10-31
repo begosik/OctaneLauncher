@@ -3,10 +3,12 @@ param([Parameter(Mandatory=$true)][string]$Package,[Parameter(Mandatory=$true)][
 # derived game startup fixtures do not certify RA3 gameplay or GPU performance.
 if($PSVersionTable.PSEdition-eq'Core'){& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -Package $Package -Layout $Layout -Output $Output;exit $LASTEXITCODE}
 $Package=(Resolve-Path $Package).Path;$Layout=(Resolve-Path $Layout).Path
+$camera157ScriptDirectory=$PSScriptRoot
 $t=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'fps_slider157.ps1')).Replace("`r`n","`n")
 $a=$t.IndexOf("`$ErrorActionPreference='Stop'");$b=$t.IndexOf("`ntry{`n Check")
 if($a-lt0-or$b-le$a){throw 'Unexpected FPS validation helper boundaries'}
-Invoke-Expression $t.Substring($a,$b-$a)
+$camera157Helpers=$t.Substring($a,$b-$a).Replace('$PSScriptRoot','$camera157ScriptDirectory')
+Invoke-Expression $camera157Helpers
 Add-Type -TypeDefinition @'
 using System; using System.Text; using System.Runtime.InteropServices;
 public static class Camera157Input {
