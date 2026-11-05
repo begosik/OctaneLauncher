@@ -21,7 +21,7 @@ public static class Octane159ExitDialog {
 '@
 $env:APPDATA=Join-Path $Work 'Roaming';[IO.Directory]::CreateDirectory($env:APPDATA)|Out-Null
 $original='c3332145b101c72ee07f6a1741461b28df0a941e7ea82401c70522faab844c8a'
-$patched='00760f8f848ef5248fb4616b8eea64c8ee47aad48dff8fa2fee189a93ca45c52'
+$patched='13ef9630178c974f2e0b12f3eecc860c0cd781fe664bfb84f8e3cbc11f2e107a'
 $client=Join-Path $env:APPDATA 'RA3BattleNet';$contents=Join-Path $client 'contents';[IO.Directory]::CreateDirectory($contents)|Out-Null
 $dll=Join-Path $contents 'NativeDll.dll';$v=$null;$engine=$null;$fileLock=$null;$clientProcess=$null;$started=$null
 function DllHash {try{return (Get-FileHash -LiteralPath $dll).Hash.ToLowerInvariant()}catch{return ''}}
@@ -58,7 +58,7 @@ function SeedWhileRunning([int]$seconds,[int]$exitCode){
  }finally{if($taken){$mutex.ReleaseMutex()};$mutex.Dispose()}
 }
 try{
- Check ((Get-FileHash $PatchedFixture).Hash.ToLowerInvariant()-eq$patched) 'Fixture is the actual published 1.2.40 patched NativeDll'
+ Check ((Get-FileHash $PatchedFixture).Hash.ToLowerInvariant()-eq$patched) 'Fixture is the exact authenticated 1.2.59 NativeDll with the two reviewed network fixes'
  $game=Join-Path $Work 'InstalledGame';[IO.Directory]::CreateDirectory((Join-Path $game 'Data'))|Out-Null
  $enginePath=Join-Path $game 'Data\ra3_1.12.game';Copy-Item $env:ComSpec $enginePath
  [IO.File]::WriteAllText((Join-Path $game 'RA3_english_1.12.SkuDef'),"set-exe Data\ra3_1.12.game`r`nset-search-path big:`r`n")
