@@ -1,0 +1,18 @@
+{
+  "format": "OCTANE_AUTOFIX_WINDOWS_TEST_161",
+  "file": "autofix_windows.exe",
+  "bytes": 62976,
+  "sha256": "c78de4f9be2a38daf29b9477076ab325384a142af55f35df413d0d886dd61e36",
+  "parts": [
+    "autofix00.b64",
+    "autofix01.b64",
+    "autofix02.b64",
+    "autofix03.b64",
+    "autofix04.b64",
+    "autofix05.b64",
+    "autofix06.b64",
+    "autofix07.b64"
+  ],
+  "production_module_sha256": "58a0c599e15d7fcb0804ec455cccab50cecb570edd31d79251dfed9c136635c1",
+  "scope": "Exact production auto-repair module; real registry and file APIs; isolated HKCU key and disposable Profiles root. No live HKLM, user profile, game, launcher payload or network."
+}
