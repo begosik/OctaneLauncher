@@ -1,0 +1,127 @@
+{
+  "code_sha256": "10f6a40b032bd3959ddf0c2e451964c8e702f2884ab1ea6eb61d70ebc6af5f2f",
+  "code_bytes": 13540,
+  "capture_va": 271671296,
+  "dispatch_va": 271671360,
+  "admission_va": 271671520,
+  "terminal_va": 271671648,
+  "recovery_begin_va": 271682656,
+  "state_rva": 3101952,
+  "state_bytes": 2816,
+  "game_status_offset": 984,
+  "seh_handlers": [
+    3246320,
+    3246336,
+    3246352,
+    3246368
+  ],
+  "endpoint_hooks": [
+    {
+      "va": "0x1010948F",
+      "rva": "0x10948F",
+      "before": "8b46708b55a4",
+      "length": 6,
+      "entry_symbol": "endpoint162_receive_entry",
+      "resume_va": "0x10109495",
+      "jump_marker_hex": "e901a02016",
+      "abi": "ESI=do_relay_local frame, [EBP-0x5C]=successful receive length; frame+0x21C=Connection, frame+0x44=source endpoint",
+      "replayed": "mov eax,[esi+0x70]; mov edx,[ebp-0x5C]",
+      "file_offset": "0x10888f",
+      "entry_va": 271671680
+    },
+    {
+      "va": "0x100FFD58",
+      "rva": "0xFFD58",
+      "before": "8b4db88d5544",
+      "length": 6,
+      "entry_symbol": "endpoint162_ctor_entry",
+      "resume_va": "0x100FFD5E",
+      "jump_marker_hex": "e902a02016",
+      "abi": "[EBP-0x48]=Connection under construction, [EBP+0x0C]=28-byte by-value local game endpoint argument; session at Connection+0x4220 already written",
+      "replayed": "mov ecx,[ebp-0x48]; lea edx,[ebp+0x44]",
+      "file_offset": "0xff158",
+      "entry_va": 271671824
+    },
+    {
+      "va": "0x1010030E",
+      "rva": "0x10030E",
+      "before": "8bc68b4df4",
+      "length": 5,
+      "entry_symbol": "endpoint162_created_entry",
+      "resume_va": "0x10100313",
+      "jump_marker_hex": "e903a02016",
+      "abi": "ESI=fully successfully constructed Connection; all validations and by-value argument destruction complete",
+      "replayed": "mov eax,esi; mov ecx,[ebp-0x0C]",
+      "file_offset": "0xff70e",
+      "entry_va": 271671968
+    },
+    {
+      "va": "0x10100AA4",
+      "rva": "0x100AA4",
+      "before": "8bf1566a15",
+      "length": 5,
+      "entry_symbol": "endpoint162_destroy_entry",
+      "resume_va": "0x10100AA9",
+      "jump_marker_hex": "e904a02016",
+      "abi": "ECX=Connection at standalone destructor before object cleanup",
+      "replayed": "mov esi,ecx; push esi; push 0x15",
+      "file_offset": "0xffea4",
+      "entry_va": 271672112
+    },
+    {
+      "va": "0x101130A9",
+      "rva": "0x1130A9",
+      "before": "8d86d8000000",
+      "length": 6,
+      "entry_symbol": "endpoint162_destroy_normal_entry",
+      "resume_va": "0x101130AF",
+      "jump_marker_hex": "e905a02016",
+      "abi": "ESI=run_relay coroutine frame; Connection is frame+0xD8; inlined destructor normal-completion path",
+      "replayed": "lea eax,[esi+0xD8]",
+      "file_offset": "0x1124a9",
+      "entry_va": 271672256
+    },
+    {
+      "va": "0x1011321C",
+      "rva": "0x11321C",
+      "before": "8d86d8000000",
+      "length": 6,
+      "entry_symbol": "endpoint162_destroy_failure_entry",
+      "resume_va": "0x10113222",
+      "jump_marker_hex": "e906a02016",
+      "abi": "ESI=run_relay coroutine frame; Connection is frame+0xD8; inlined destructor failure-completion path",
+      "replayed": "lea eax,[esi+0xD8]",
+      "file_offset": "0x11261c",
+      "entry_va": 271672400
+    },
+    {
+      "va": "0x1010A2C6",
+      "rva": "0x10A2C6",
+      "before": "8b860c030000",
+      "length": 6,
+      "entry_symbol": "endpoint162_remote_min_entry",
+      "resume_va": "0x1010A2CC",
+      "jump_marker_hex": "e907a02016",
+      "additional_jump_markers": [
+        {
+          "hex": "e908a02016",
+          "target_va": "0x1010B1D9"
+        }
+      ],
+      "abi": "ESI=do_relay_remote coroutine frame, [EBP-0xC8]=successful receive byte count; child awaitable already destroyed; before any endpoint learning/watchdog/header span",
+      "replayed": "mov eax,[esi+0x30C]",
+      "tiny_path": "Length0/1 goes to original 0x1010B1D9 cleanup, sets EH states1 and resumes receive at0x1010B1F0. Length>=2 replays exact original instruction. EFLAGS and GP registers preserved.",
+      "file_offset": "0x1096c6",
+      "entry_va": 271672544
+    }
+  ],
+  "connection_registry_capacity": 64,
+  "state_structure_bytes": 2636,
+  "symbols": {
+    "_relay_connection_current": 271672576,
+    "_relay_connection_created": 271672720,
+    "_relay_connection_destroyed": 271673024,
+    "_endpoint162_on_local_receive": 271681840
+  },
+  "packet_capacity_or_truncation_changed": false
+}
