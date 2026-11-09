@@ -5,7 +5,8 @@ $Transport=(Resolve-Path $Transport).Path;$Package=(Resolve-Path $Package).Path;
 python "$PSScriptRoot/autofix_package162.py" $Package (Join-Path $Output 'AUTOFIX_PACKAGE_162.json')
 if($LASTEXITCODE-ne0){throw 'Actual package execution-level contract failed'}
 $meta=Get-Content -LiteralPath (Join-Path $Transport 'manifest.json') -Raw|ConvertFrom-Json
-if($meta.format-ne'OCTANE_AUTOFIX_WINDOWS_TEST_162'-or$meta.file-ne'autofix_windows.exe'-or$meta.bytes-lt512-or$meta.bytes-gt262144){throw 'Invalid bounded automatic-fix test manifest'}
+# The unchanged 1.2.61 automatic-fix fixture retains its original transport schema.
+if($meta.format-ne'OCTANE_AUTOFIX_WINDOWS_TEST_161'-or$meta.file-ne'autofix_windows.exe'-or$meta.bytes-lt512-or$meta.bytes-gt262144){throw 'Invalid bounded automatic-fix test manifest'}
 if($meta.sha256-notmatch'^[0-9a-f]{64}$'-or$meta.production_module_sha256-notmatch'^[0-9a-f]{64}$'-or$meta.parts.Count-lt1-or$meta.parts.Count-gt40){throw 'Invalid automatic-fix test identity'}
 $encoded='';$seen=@{}
 foreach($part in $meta.parts){
