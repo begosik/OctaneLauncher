@@ -1,0 +1,153 @@
+{
+  "changed_scripts": [
+    "fps_renderer163.ps1",
+    "fps_slider163.ps1",
+    "camera_slider163.ps1",
+    "renderer163.ps1",
+    "verify_fps_profile163.py"
+  ],
+  "byte_identical_shared_helpers": {
+    "windows_public_test.ps1": "b6ece24a53dfd57307b44b479edf477fe8e7609ce14961f0f552971fe2bffe4e"
+  },
+  "runtime_inputs": [
+    "verified signed RA3Octane_1.2.63_Players_Compact.zip",
+    "transport163/1.2.63/runtime-layout.json"
+  ],
+  "profile_verifier_additional_inputs": [
+    "verified baseline public ZIP",
+    "transport163/1.2.63/manifest.json with public client offsets and archive hashes"
+  ],
+  "windows_requirements": [
+    "Windows PowerShell 5.1",
+    "System.Drawing desktop session for native GDI screenshots",
+    "Python 3 for opaque profile validation",
+    "OpenSSL from PATH or Git for Windows"
+  ],
+  "native_C7_update_BattleNet_recovery_mod_regressions": "Retain the complete previously reviewed162 scripts unchanged; root workflow supplies current package, version/layout and existing wrapper adaptations. These four scripts add focused changed-area coverage, not a replacement suite.",
+  "private_assets_copied": false,
+  "production_sources_required": false,
+  "GPU_gameplay_or_network_certification": false,
+  "child_environment": "Bounded read-only x86 PEB observation is asserted when captured. Optional -RequireChildEnvironment makes unavailable short-lived child observation a hard failure; deterministic native production environment fixture remains separate.",
+  "entry_script": "fps_renderer163.ps1",
+  "entry_parameters": [
+    "Package",
+    "Baseline",
+    "Manifest",
+    "Layout",
+    "Output",
+    "RequireChildEnvironment(optional)"
+  ],
+  "workflow": ".github/workflows/release-163.yml",
+  "version_adapted_helpers": [
+    "autofix_package163.py",
+    "autofix_windows163.ps1",
+    "battlenet_163.ps1",
+    "bn_image163.cs",
+    "bn_swap163.ps1",
+    "community_163.ps1",
+    "compact_cache163.ps1",
+    "extract_observers163.py",
+    "options_windows163.ps1",
+    "windows_163.ps1",
+    "xinput163.ps1"
+  ],
+  "retained_helper_sha256": {
+    "assemble_162.py": "466a44fafb770a0ce6a34c1dcb47cbaac5d0f8b5493966dfb5b4d2f33ff0515a",
+    "assemble_signed_v2.py": "20ea564ca2800d184b8ce973d033ca040d3e4bf3ca54c3fba8a063ed4b954071",
+    "assemble_signed_v3.py": "a9f19d35997097818b3e6be46670dda7b475e40e8fff676c2ddeb16643c1710a",
+    "autofix_package162.py": "2965b0500eb71e3df7b42f300437dab79e7f1975212e18e49db65edc02acafd3",
+    "autofix_windows162.ps1": "442e26fc9ea363e9f56feb7460dbadf25e07d90aa29ef1e67e3c570d27c101b7",
+    "battlenet_162.ps1": "fb378a407ac57b47aac31e018b5c0980c3e76c43e6e9a6e198d6891d12d724c9",
+    "bn_image162.cs": "1830ca4b5acbe4d4d24711d2aac515c743813b974ac6e9a73fc58f48499fc56f",
+    "bn_swap162.ps1": "63c236ca92ba94a48fefc7e970cd3966dc734cc201957692c18d01a2ca36dd99",
+    "camera_slider162.ps1": "638f923dc5eaf6a7efe1a691e4920c278d8dbd6af20991e20e55ea277b08522b",
+    "community_142.ps1": "dfe974fc8be656e5b61aaeeb7098186554029e941e6c80c9b03d89f859595daa",
+    "connection162.py": "41283fb21f430954503b4d83d441c8ac6511fd0b5be81a906ad6af14866fbbff",
+    "connection162_build.ps1": "84a14628b6b33c62784e9317b16b3fab80831e034852173c47de6fe0f403b762",
+    "connection162_windows.ps1": "34c994c97ae82fb526a1ad4fba76ec93ec193fc8254c2107bf0c6a7c50017ef5",
+    "extract_lobby162.py": "d7489cfbc579677a59715050a4cc01c39992d295c9f4fdbfd3d536fd938bb7fa",
+    "extract_native141.py": "c6291f534ac19a2a7286215046616b6050fcc9e3b38d8b65b57fc1cc89112808",
+    "extract_observers146.py": "3cf61b2df3447e846be39c6bf81db84ddc183069208a4e341fd70b67fa46bed3",
+    "extract_observers162.py": "b9b7eb92bcb6a537dac2430ecdbcf7672d95793e8998098749df17d08a654361",
+    "fps_slider162.ps1": "48d397cf7bb7379acf72857c69d7751925727bc966d2cc8628a7aeddb9f01a80",
+    "http_update_134.ps1": "64497d01467cf15dea2a990febd9342788b68ea9df37bc8e3a7f0e6b1c141118",
+    "installer162.c": "d7d832825e9ff58ceb4489a179c009f58f84c1a12a6fb2cbc60ae8c254f1995f",
+    "installer162.py": "d2f68565b67ef52c3d53b9abb8ab825370e323ebe09aafaf80a6f912af0feea1",
+    "installer162_build.ps1": "fafda4266eeeb7ea071e8cdce05a450269ac912cabc61a98ad71cc5026d037cc",
+    "installer162_runner.c": "e74d1cb6fa4560990fa2438daa926496cd32953b139ba6cc447e0751fd3018d4",
+    "native_audit162.py": "e31ff437b853bab16e0b7f2210b471378f58a8fb53d391f96f06b5ca146e25a5",
+    "network162.ps1": "cea6a764639633911aaf1316d7e361b305370fb72946a664c356b4fd72566bf3",
+    "network162_build.ps1": "6b2756ae1ab7af14732ec795233c1dfc8cd96abdaa6edd8a61ed343f6c302813",
+    "network162_faults.cpp": "bd5d7aa5f34bac1cfebc38e23effc77e35d98d77cc046a90709bcf317be33311",
+    "network162_windows.c": "ef23a6557dc5c3764627ea192504e19913c41025a96d341b900fe212774a5feb",
+    "options_windows162.ps1": "1c1f5aa18cd6197630f914d1d018c3c1745c6f5cd95be579b91092a67376ce36",
+    "probe162.py": "ba6e67a1fcfd25c272f36f80fa56900100f7b162c3ef916b3e47b91e1718ead5",
+    "recovery162.py": "8803d65c7399beff61ea1fd35751cc1fead875d527a6e33011795341994f2f07",
+    "recovery_fixture162.py": "b7d5112c8cb280e834052d2e827a6f02f10d887bd29d424865ed7f13b8f4c476",
+    "relay162_baseline.c": "2c51552dee08fed3506df85dfca9786b38ba04375f0d1dad4216952f3b1e4b06",
+    "remote_tiny162.py": "fc1878c2a33ea16932853460f238e1640e08c84ea55e30bde7202ef65e9c1238",
+    "terminal162.py": "85b1062c2d02018662a62448f925c78cad608d066e8b247ff5b6f4a268484eb9",
+    "verify_fps_profile162.py": "db8fda7d3b0cd5052f2e8a06e7274140aed88d37e363f1986872b379463efa69",
+    "windows_162.ps1": "cd33b96a5c0725ea507ac5b7c75a532ec775530ad39e31f4e0a05715e0aa709b",
+    "windows_public_ready.ps1": "3c28e5666266cd5f24aae1c919835300f6385796b9282d8ac86548c935edfffb",
+    "windows_public_test.ps1": "b6ece24a53dfd57307b44b479edf477fe8e7609ce14961f0f552971fe2bffe4e",
+    "xinput162.ps1": "fe24c741bb11be8e04f52cf6322c1022a432e9df60017d6ccaf9f51b680271da",
+    "xinput_loader162.py": "9a113e6450f283f2fd5aa19fe4cfb0d7355c5ab89ba0d216fba6954f365d45c8"
+  },
+  "retained_native_fixture": {
+    "assembler": "assemble_162.py",
+    "transport": "transport162/1.2.62",
+    "extractor": "extract_lobby162.py",
+    "canonical_game_sha256": "f1b4ede3229921abd474e0a251fe1880ca98981d9cbf45e4b5c3b8fee08c7a31",
+    "Native_C7_sha256": "c7de4f1968831e6b66103f52739bd6afea2758f7f0b42ffe8f590543b8427b58",
+    "network_entry": "network162.ps1",
+    "unchanged_network_test_code": true,
+    "reason": "New163 opaque package verification independently proves exact same C7; retained C7/network tests keep their reviewed canonical F1 fixture."
+  },
+  "retained_transports": [
+    "transport162/autofix-test (schema161)",
+    "transport151/options-test (schema151)"
+  ],
+  "bn_swap_CSharp_dependency": "bn_image163.cs",
+  "publish_assets": [
+    "RA3Octane_1.2.63_Players_Compact.zip",
+    "release.oct"
+  ],
+  "publishing_performed": false,
+  "compact_fixture_cache": {
+    "helper": "compact_cache163.ps1",
+    "base": "RUNNER_TEMP",
+    "random_direct_child": "oc63<8 hex>",
+    "production_Data_limit_bytes": 128,
+    "validation_disabled": false,
+    "local_Data_bytes_observed": 103,
+    "hosted_runner_example": "D:\\a\\_temp\\oc63<8 hex>\\Begosik\\RA3Octane\\Sessions\\session-runtime\\Data"
+  },
+  "community_retained_source": {
+    "source": "community_142.ps1",
+    "byte_identical": true,
+    "wrapper": "community_163.ps1",
+    "only_template_change": "isolated compact LOCALAPPDATA before launcher startup"
+  },
+  "changed_helper_sha256": {
+    "assemble_163.py": "1c438c8b2ac38fc61967eafbc769dafbbfe68ce3e42bff2b0164cde68e347a26",
+    "autofix_package163.py": "d8d56085d85004845e415ce20b99c15e1e8fdd70557ca6ff438cd4dd50a2f13f",
+    "autofix_windows163.ps1": "fba64822439ef9497dc6847485ea1153d82fece1df5ac0f414413bcaacdabf77",
+    "battlenet_163.ps1": "cbb440aca823177b795042b1a5a9355e933573fc161de36192738befa58ec825",
+    "bn_image163.cs": "817f8f33ec3abbdb20de5955327f880f2941160a4d76feb48d7c6b01493ad9fd",
+    "bn_swap163.ps1": "2384cb51c449ebd58a3de10aef7536fe9fadd70563206c3519568b98b97d28df",
+    "camera_slider163.ps1": "a1dae4c12a19bd613ab90b9009dab4a2301017778c67ceab50c0c91581350ae8",
+    "community_163.ps1": "4a1f0a87ec702d8f1d96c43ed1cf67877cd6b41f38070acd56ec218c158a6728",
+    "compact_cache163.ps1": "e794f3a3b06e5d08eed0d287f0fbca10a4d14d2108d4cec21cdc6507b7528fe1",
+    "extract_observers163.py": "1c460159ea3840208c1a1497c8dc871dc76107f1eb72cd830e066453366d6dee",
+    "fps_renderer163.ps1": "667c5fcb8ce9d69d06b44467ca7db3ab8482f83b472644131090b681d30bf74f",
+    "fps_slider163.ps1": "71100d9d5c8807311dbc9a63b0b9199b1ba62d593df415c1525ea537502a059b",
+    "options_windows163.ps1": "4e5869215f8887c51924d755a07c14bd240bd81d2ccbb0b1aeb4c10b85c0019f",
+    "renderer163.ps1": "f9aa60338589d4a7f3d424982bf6ac4e6600e18b56cd6bbd99aa98924e198f7b",
+    "verify_fps_profile163.py": "6d6b93cd71bc1ba1987f93d577d7ed51dbf120756f078425a63cb5fe816bb065",
+    "windows_163.ps1": "f661c0cc707a478078b462c1a34ec855b0956cd41cd5c688dca8154d702fea56",
+    "xinput163.ps1": "43896ba4f13853931722cebbc439852b4c1e958c803b8591a04e29dac88a3382"
+  },
+  "workflow_sha256": "4618b07c21d55d8747ce9eac637c29a3103057165e8fc591155e3595011f7b16",
+  "runtime_layout_sha256": "5a0e9388445f94ac60dde134dec121ae142ca0465094f59c61884b89796737cf"
+}
